@@ -1,0 +1,3 @@
+betas <- function(glm) {
+  # TODO
+}

@@ -1,0 +1,3 @@
+variate <- function(x) {
+  # TODO
+}

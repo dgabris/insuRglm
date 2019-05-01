@@ -1,0 +1,101 @@
+my_simple_factors <- c("var1", "var2", "var3")
+
+setup <- setup(
+	data_train = "z_prep_train",
+	data_test = "z_prep_test",
+	target = "fire_lr",
+	weight = "pol_loc_premium",
+	time_var = "pol_eff_year",
+	family = "tweedie",
+	tweedie_p = 1.5,
+	simple_factors = my_simple_factors,
+	seed = 999
+)
+
+basic_summary(setup)
+# number of observations
+# average target
+# max target
+# min target
+
+target_distribution(setup)
+# plot of target distribution
+
+# sum_target, avg_target, sum_weight
+data_analyzer(
+	setup,
+	list(
+		c("pol_eff_year"),
+		c("risk_grade_catg", "pol_eff_year")
+	),
+	type = "graph"
+)
+
+# graph or table
+corr_matrix(setup, type = "graph")
+
+# data analyzer, across_time and across_rand_factor an will use the same function under the hood
+across_time(setup, "var1")
+across_rand_factor(setup, "var1")
+
+# potentially - stepwise GLM, stepwise GLM with crossval, RF with weights
+variable_importance(setup)
+
+modeling <- setup %>%
+	formula_add(var1) %>%
+	formula_remove(var1) %>%
+	factor(
+		var2 = custom_factor(var2),
+		var3 = variate(var3),
+		var4 = interaction(var4, var5),
+		var5 = offset(var5)
+	) %>%
+	save_model()
+	visualize()
+	
+# visualize(setup, type = c("predicted", "rescaled_linear", "comparison"), with = NULL)
+# Alternatively, this could be on different tabs of the addin
+# Alternatively, these could be buttons to switch states of visualization
+# Need to decide on the layout and basic entity, e.g. what will the one tab be - factor or type of visualization?
+
+# Note: every step (add_var, remove_var, create_cust_factor, create_variate) will automatically
+# save the current model as previous model and update the current model with the new change
+# In this way, we'll always be able to compare the effect of the last step even 
+# without explicit reference model saving
+
+# Visualize will contain e.g. 
+# fit() function
+# visualize_glm, betas, model statistics, lift_chart(on train), leverage plots,  
+# these can be run outside of visualize if needed
+
+# betas() - neeeds to contain name, category, value, std error, std err%, weight, weight%, exp(value)
+# beta_triangle() - standard errors of parameter differences
+# nested_models_test() - chi squared / F tests which use deviance to compare nested models
+# corr_matrix() of factors in the model
+# multiway_table() of factors in the model, to hint about potential interaction
+
+# create_cust_factor()
+# map back to the original values 
+
+# create_variate()
+# proportional/ non-proportional
+# map back to the original values
+
+# deal with aliases
+# deal with interactions
+# offsetting?
+# zero-weighting?
+
+# evaluate()
+# on test set only 
+# visualize final factors (not the ones not included)
+# see lift chart
+# betas over time
+# betas over random factor
+evaluation <- modeling %>%
+	evaluate()
+	
+show(evaluation)
+
+# fit final model
+# export relativities
