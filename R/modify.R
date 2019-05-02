@@ -1,3 +1,6 @@
 modify <- function(setup, ...) {
-  # TODO
+  dots <- enexprs(...)
+
+  setup$data_train <- setup$data_train %>%
+    mutate(!!!dots)
 }
