@@ -1,9 +1,11 @@
 add <- function(setup, var_symbol) {
   stopifnot(inherits(setup, "setup"))
 
-  new_var <- as.character(enexpr(var_symbol))
+  new_var <- as.character(rlang::enexpr(var_symbol))
+  stopifnot(new_var %in% setup$simple_factors)
 
-  setup$predictors <- c(setup$predictors, new_var)
+  if(new_var %in% setup$predictors) message(paste0("Can't add '", new_var, "'. It's already among predictors."))
+  setup$predictors <- unique(c(setup$predictors, new_var))
 
   setup
 }

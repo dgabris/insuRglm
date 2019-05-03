@@ -1,6 +1,8 @@
 modify <- function(setup, ...) {
-  dots <- enexprs(...)
+  dots <- rlang::enexprs(...)
 
   setup$data_train <- setup$data_train %>%
-    mutate(!!!dots)
+    dplyr::mutate(!!!dots)
+
+  setup
 }
