@@ -1,4 +1,4 @@
-save <- function(setup, model_name = NULL) {
+model_save <- function(setup, model_name = NULL) {
   stopifnot(inherits(setup, "setup"))
   stopifnot(inherits(setup, "modeling"))
 

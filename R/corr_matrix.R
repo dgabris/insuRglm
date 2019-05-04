@@ -40,7 +40,7 @@ corr_matrix <- function(setup, type = c("graph", "table")) {
 
   } else {
     deduped_assoc_df %>%
-      dplyr::mutate(cramers_v = if_else(var1 == var2, NA_real_, cramers_v)) %>%
+      dplyr::mutate(cramers_v = dplyr::if_else(var1 == var2, NA_real_, cramers_v)) %>%
       dplyr::mutate(var1 = as.factor(var1)) %>%
       dplyr::mutate(var2 = factor(var2, levels = rev(levels(var1)))) %>%
       ggplot2::ggplot(ggplot2::aes(x = var1, y = var2, color = cramers_v)) +

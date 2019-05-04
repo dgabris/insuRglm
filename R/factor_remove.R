@@ -1,4 +1,4 @@
-remove <- function(setup, var_symbol) {
+factor_remove <- function(setup, var_symbol) {
     stopifnot(inherits(setup, "setup"))
 
     remove_var <- as.character(rlang::enexpr(var_symbol))

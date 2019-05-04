@@ -7,7 +7,7 @@ fit <- function(setup) {
 
   vars <- c(target, weight, predictors)
   train <- setup$data_train[vars]
-  weight_vector <- train[[weight]]
+  weight_vector <- if(is.null(weight)) rep(1, nrow(train)) else train[[weight]]
 
   predictors_collapsed <- paste0(predictors, collapse = " + ")
   formula <- as.formula(paste0(target, " ~ ", predictors_collapsed))
@@ -45,11 +45,18 @@ fit <- function(setup) {
     data = train
   )
 
-  betas <- betas(train[predictors], broom::tidy(glm))
-  stats <- broom::glance(glm)
-  predictions <- predict(glm, newdata = setup$data_train, type = "response")
+  betas <- betas(predictors, broom::tidy(glm))
+  model_stats <- broom::glance(glm)
+  predictions <- predict(glm, newdata = train, type = "response")
+  factor_tables <- factor_tables(setup, betas, predictions)
+  relativities <- relativities(factor_tables)
 
-  setup$current_model <- list(betas, stats, predictions)
+  setup$current_model <- list(
+    betas = betas,
+    model_stats = model_stats,
+    factor_tables = factor_tables,
+    relativities = relativities
+  )
 
   if(!inherits(setup, "modeling")) {
     class(setup) <- c("modeling", class(setup))

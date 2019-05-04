@@ -1,3 +1,0 @@
-visualize <- function(setup) {
-  # TODO
-}

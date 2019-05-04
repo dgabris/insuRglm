@@ -1,20 +1,20 @@
-betas <- function(train_predictors, broom_coefs) {
-  browser()
-
-  train_predictors
-
-  predictors <- names(train_predictors)
+betas <- function(predictors, broom_coefs) {
   predictors_regex <- paste0(predictors, collapse = "|")
 
-  base_df <- tibble(factor = "(intercept)", category = "(intercept)")
+  intercept_row <- broom_coefs %>%
+    dplyr::filter(term == "(Intercept)") %>%
+    dplyr::rename(factor = term) %>%
+    dplyr::mutate(actual_level = "(Intercept)") %>%
+    dplyr::select(
+      factor, actual_level, estimate, std_error = `std.error`, statistic, p_value = `p.value`
+    )
 
-  for(pred in predictors) {
-    x <- train_predictors[[pred]]
-    x_coefs <- broom_coefs %>%
-      dplyr::filter(stringr::str_detect(string = term, pattern = pred))
+  tidy_coefs <- broom_coefs %>%
+    dplyr::mutate(factor = stringr::str_extract(term, predictors_regex)) %>%
+    dplyr::mutate(actual_level = stringr::str_replace(term, factor, "")) %>%
+    dplyr::select(
+      factor, actual_level, estimate, std_error = `std.error`, statistic, p_value = `p.value`
+    )
 
-
-
-  }
-
+  rbind(intercept_row, tidy_coefs)
 }

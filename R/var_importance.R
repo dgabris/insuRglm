@@ -13,7 +13,7 @@ var_importance <- function(setup, direction = c("backward", "forward", "both"), 
     family <- get(setup$family)
   }
 
-  weights <- train[[setup$weight]]
+  weights <- if(is.null(setup$weight)) rep(1, nrow(train)) else train[[setup$weight]]
 
   # prepare simple factors for fitting
   for(var in predictors) {
