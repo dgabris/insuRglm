@@ -10,7 +10,6 @@ setup <- setup(
   data_test = test,
   target = "severity",
   weight = "numclaims",
-  time_var = "acc_year",
   family = "gamma"
 )
 
@@ -35,7 +34,7 @@ modeling <- setup %>%
   model_fit() %>%
   model_save("model1") %>%
   factor_modify(
-    veh_value = variate(veh_value, type = "non_prop"),
+    veh_value = variate(veh_value, type = "prop"),
     veh_body = custom_factor(veh_body, mapping = c(1, 1, 2:6, 7, 7, 8:11))
   ) %>%
   model_fit() %>%

@@ -1,11 +1,16 @@
-setup <- function(data_train, data_test = NULL, target, weight = NULL, time_var = NULL,
+setup <- function(data_train, data_test = NULL, target, weight = NULL,
                   family = c("poisson", "gamma", "tweedie"), tweedie_p = NULL,
                   simple_factors = NULL, seed = NULL) {
 
-  simple_factors <- unique(c(simple_factors, time_var))
-
   stopifnot(inherits(data_train, "data.frame"))
   stopifnot(target %in% colnames(data_train))
+
+  if(is.null(simple_factors)) {
+    simple_factors <- setdiff(names(data_train), c(target, weight))
+  } else {
+    simple_factors <- unique(simple_factors)
+  }
+
   stopifnot(all(simple_factors %in% colnames(data_train)))
   stopifnot(all(vapply(data_train[simple_factors], class, character(1)) == "factor"))
 
@@ -28,10 +33,6 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, time_var 
     tweedie = statmod::tweedie(var.power = tweedie_p, link.power = 0)
   )
 
-  if(length(simple_factors) == 1 && simple_factors == time_var) {
-    simple_factors <- setdiff(names(data_train), c(target, weight))
-  }
-
   for(var in simple_factors) {
     data_train[[var]] <- simple_factor(data_train[[var]], data_train[[weight]])
     data_test[[var]] <- simple_factor(data_test[[var]], data_test[[weight]])
@@ -41,7 +42,6 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, time_var 
     list(
       target = target,
       weight = weight,
-      time_var = time_var,
       family = family,
       simple_factors = simple_factors,
       seed = seed,
