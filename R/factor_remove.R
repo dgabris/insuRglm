@@ -1,10 +1,12 @@
 factor_remove <- function(setup, var_symbol) {
     stopifnot(inherits(setup, "setup"))
 
-    remove_var <- as.character(rlang::enexpr(var_symbol))
-    if(!remove_var %in% setup$predictors) message(paste0("Can't remove '", remove_var, "'. It's not among predictors."))
+    remove_var <- as.character(rlang::ensym(var_symbol))
+    predictors <- setup$current_model$predictors
 
-    setup$predictors <- setdiff(setup$predictors, remove_var)
+    if(!remove_var %in% predictors) message(paste0("Can't remove '", remove_var, "'. It's not among predictors."))
+
+    setup$current_model$predictors <- setdiff(predictors, remove_var)
 
     setup
 }

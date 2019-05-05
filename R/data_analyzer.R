@@ -1,18 +1,59 @@
-data_analyzer <- function(setup, var_list, type = c("graph", "table")) {
-  type <- match.arg(type)
+data_analyzer <- function(setup, factors = NULL, second_dim = NULL, type = c("graph", "table")) {
   stopifnot(inherits(setup, "setup"))
-  stopifnot(typeof(var_list) == "list")
+  type <- match.arg(type)
 
-  var_list_member_lengths <- lapply(var_list, length)
-  stopifnot(all(var_list_member_lengths %in% c(1, 2)))
+  factors <- if(is.null(factors)) setup$simple_factors else factors
+  stopifnot(is.character(factors))
 
-  if(type == "graph") {
-    for(var_combination in var_list) {
-      # something
-    }
-  } else {
-    # something else
+  train <- setup$data_train
+  target_sym <- rlang::sym(setup$target)
+  weight_sym <- rlang::sym(setup$weight)
+
+  factors_list <- as.list(factors) %>%
+    purrr::set_names(factors) %>%
+    lapply(function(x) {
+      x <- c(x, second_dim)
+      x
+    }) %>%
+    lapply(function(x) {
+      x_syms <- rlang::syms(x)
+
+      train %>%
+        dplyr::group_by(!!!x_syms) %>%
+        dplyr::summarize(
+          weight_sum = sum(!!weight_sym),
+          target_sum = sum(!!target_sym),
+          target_avg = mean(!!target_sym)
+        ) %>%
+        dplyr::ungroup() %>%
+        dplyr::arrange(!!!x_syms)
+    })
+
+  if(type == "table") {
+    return(factors_list)
   }
 
-  # return result
+  if(is.null(second_dim)) {
+
+    plot_list <- factors_list %>%
+      lapply(function(x) {
+        x %>%
+          dplyr::select(-target_sum) %>%
+          oneway_plot()
+      })
+
+  } else {
+
+    plot_list <- factors_list %>%
+      lapply(function(x) {
+        x %>%
+          dplyr::select(-target_sum) %>%
+          twoway_plot()
+      })
+
+    plot_list[[second_dim]] <- NULL
+
+  }
+
+  plot_list
 }

@@ -7,12 +7,7 @@ var_importance <- function(setup, direction = c("backward", "forward", "both"), 
   formula <- as.formula(paste0(setup$target, " ~ ", predictors_collapsed))
   train <- setup$data_train
 
-  if(setup$family == "tweedie") {
-    family <- tweedie::tweedie(var.power = setup$tweedie_p, link.power = 0)
-  } else {
-    family <- get(setup$family)
-  }
-
+  family <- setup$family
   weights <- if(is.null(setup$weight)) rep(1, nrow(train)) else train[[setup$weight]]
 
   # prepare simple factors for fitting

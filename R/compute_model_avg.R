@@ -37,7 +37,7 @@ compute_model_avg <- function(x, x_betas) {
         model_avg_pred_rescaled = exp(estimate),
         model_avg_lin_rescaled = estimate
       ) %>%
-      dplyr::select(-actual_level)
+      dplyr::select(-actual_level, -estimate)
 
   } else if(inherits(x, "variate")) {
     stopifnot(nrow(main_rows) == 1)
@@ -57,7 +57,7 @@ compute_model_avg <- function(x, x_betas) {
       model_avg_pred_rescaled = exp(estimate * actual_level),
       model_avg_lin_rescaled = estimate * actual_level
     ) %>%
-    dplyr::select(-actual_level)
+    dplyr::select(-actual_level, -estimate)
 
   } else if(inherits(x, "simple_factor")) {
     model_avg_df <- tibble::tibble(
@@ -70,7 +70,8 @@ compute_model_avg <- function(x, x_betas) {
       model_avg_lin_nonrescaled = intercept_estimate + estimate,
       model_avg_pred_rescaled = exp(estimate),
       model_avg_lin_rescaled = estimate
-    )
+    ) %>%
+    dplyr::select(-estimate)
   }
 
   model_avg_df

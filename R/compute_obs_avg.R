@@ -8,10 +8,12 @@ compute_obs_avg <- function(x, target_vector, weight_vector) {
   obs_avg_df <- dplyr::bind_cols(x = x, target = target_vector, weight = weight_vector) %>%
     dplyr::group_by(x) %>%
     dplyr::summarize(
+      weight_sum = sum(weight),
       obs_avg_pred_nonrescaled = sum(target * weight) / sum(weight),
       obs_avg_lin_nonrescaled = log(obs_avg_pred_nonrescaled)
     ) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    dplyr::rename(weight = weight_sum)
 
   ind <- orig_levels == base_model_level
   base_model_value_pred <- obs_avg_df$obs_avg_pred_nonrescaled[ind]

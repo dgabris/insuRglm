@@ -1,9 +1,9 @@
-fit <- function(setup) {
+model_fit <- function(setup) {
   stopifnot(inherits(setup, "setup"))
 
   target <- setup$target
   weight <- setup$weight
-  predictors <- setup$predictors
+  predictors <- setup$current_model$predictors
 
   vars <- c(target, weight, predictors)
   train <- setup$data_train[vars]
@@ -11,12 +11,7 @@ fit <- function(setup) {
 
   predictors_collapsed <- paste0(predictors, collapse = " + ")
   formula <- as.formula(paste0(target, " ~ ", predictors_collapsed))
-
-  if(setup$family == "tweedie") {
-    family <- tweedie::tweedie(var.power = setup$tweedie_p, link.power = 0)
-  } else {
-    family <- get(setup$family)
-  }
+  family <- setup$family
 
   # prepare simple factors, custom factors and variates for modeling
   for(var in predictors) {
@@ -47,11 +42,13 @@ fit <- function(setup) {
 
   betas <- betas(predictors, broom::tidy(glm))
   model_stats <- broom::glance(glm)
-  predictions <- predict(glm, newdata = train, type = "response")
-  factor_tables <- factor_tables(setup, betas, predictions)
+  train_predictions <- predict(glm, newdata = train, type = "response")
+  #test_predictions <- predict(glm, newdata = test, type = "response)
+  factor_tables <- factor_tables(setup, betas, train_predictions)
   relativities <- relativities(factor_tables)
 
   setup$current_model <- list(
+    predictors = predictors,
     betas = betas,
     model_stats = model_stats,
     factor_tables = factor_tables,

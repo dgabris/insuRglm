@@ -45,7 +45,7 @@ corr_matrix <- function(setup, type = c("graph", "table")) {
       dplyr::mutate(var2 = factor(var2, levels = rev(levels(var1)))) %>%
       ggplot2::ggplot(ggplot2::aes(x = var1, y = var2, color = cramers_v)) +
       ggplot2::geom_point(size = 5) +
-      ggplot2::ggtitle("Association Matrix") +
+      ggplot2::ggtitle("Correlation Matrix") +
       ggplot2::labs(x = NULL, y = NULL, color = "Cramer's V") +
       ggplot2::scale_color_gradientn(colours = c("white", "orange", "red"), values = c(0, 0.3, 1)) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.45),

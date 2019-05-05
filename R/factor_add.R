@@ -4,8 +4,10 @@ factor_add <- function(setup, var_symbol) {
   new_var <- as.character(rlang::ensym(var_symbol))
   stopifnot(new_var %in% setup$simple_factors)
 
-  if(new_var %in% setup$predictors) message(paste0("Can't add '", new_var, "'. It's already among predictors."))
-  setup$predictors <- unique(c(setup$predictors, new_var))
+  predictors <- setup$current_model$predictors
+
+  if(new_var %in% predictors) message(paste0("Can't add '", new_var, "'. It's already among predictors."))
+  setup$current_model$predictors <- unique(c(predictors, new_var))
 
   setup
 }
