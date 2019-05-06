@@ -1,4 +1,4 @@
-oneway_plot <- function(df) {
+oneway_plot <- function(df, colors) {
   stopifnot(inherits(df, "data.frame"))
 
   x_col <- names(df)[1]
@@ -6,7 +6,8 @@ oneway_plot <- function(df) {
   gather_cols <- rlang::syms(names(df)[-1])
 
   combined_df <- df %>%
-    tidyr::gather(key = type, value = target, !!!gather_cols)
+    tidyr::gather(key = type, value = target, !!!gather_cols) %>%
+    dplyr::filter(!is.na(target))
 
   weight_df <- combined_df %>%
     dplyr::filter(type == "weight_sum") %>%
@@ -22,7 +23,7 @@ oneway_plot <- function(df) {
     ggplot2::geom_point(data = target_df, ggplot2::aes(color = type), shape = 15, size = 2) +
     ggplot2::geom_line(data = target_df, ggplot2::aes(color = type), size = 1.05) +
     ggplot2::geom_bar(data = weight_df, stat = "identity", fill = "#F0E442", color = "black") +
-    #ggplot2::scale_color_manual(values = c("#33CC00", "#CC79A7", "#99FF00")) +
+    ggplot2::scale_color_manual(values = colors) +
     ggplot2::scale_x_discrete(name = NULL) +
     ggplot2::scale_y_continuous(name = NULL) +
     ggplot2::ggtitle(label = x_col) +

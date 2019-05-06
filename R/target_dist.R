@@ -1,4 +1,4 @@
-target_dist <- function(setup, ...) {
+target_dist <- function(setup, without_zero = FALSE, ...) {
   stopifnot(inherits(setup, "setup"))
 
   train <- setup$data_train %>%
@@ -17,6 +17,11 @@ target_dist <- function(setup, ...) {
 
   target <- setup$target
   target_sym <- rlang::sym(target)
+
+  if(without_zero) {
+    combined_df <- combined_df %>%
+      filter(!near(!!target_sym, 0))
+  }
 
   ggplot2::ggplot(data = combined_df, ggplot2::aes(x = train_test, y = !!target_sym)) +
     ggplot2::geom_violin(ggplot2::aes(fill = train_test), ...)

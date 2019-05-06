@@ -52,7 +52,8 @@ model_fit <- function(setup) {
     betas = betas,
     model_stats = model_stats,
     factor_tables = factor_tables,
-    relativities = relativities
+    relativities = relativities,
+    train_predictions = train_predictions
   )
 
   if(!inherits(setup, "modeling")) {

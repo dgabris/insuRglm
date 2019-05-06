@@ -14,6 +14,7 @@ setup <- setup(
 )
 
 target_dist(setup)
+target_dist(setup, without_zero = TRUE)
 
 data_analyzer(setup, type = "table")
 data_analyzer(setup, type = "graph")

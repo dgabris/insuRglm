@@ -29,6 +29,6 @@ model_visualize <- function(setup, y_axis = c("predicted", "linear"), rescaled =
         dplyr::mutate(!!var_symbol := factor(!!var_symbol, levels = orig_order)) %>%
         purrr::set_names(stringr::str_replace(names(.), pattern, "")) %>%
         dplyr::rename(pred_base_levels = model_avg) %>%
-        oneway_plot()
+        oneway_plot(colors = c("#33CC00", "#CC79A7", "#99FF00"))
     })
 }
