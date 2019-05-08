@@ -7,9 +7,12 @@ factor_tables <- function(setup, betas, predictions) {
   weight_vector <- if(is.null(weight)) rep(1, nrow(train)) else train[[weight]]
 
   simple_factors <- setup$simple_factors
+  predictors <- setup$current_model$predictors
+
+  vars <- c(predictors, setdiff(simple_factors, predictors))
   factor_tables <- list()
 
-  for(var in simple_factors) {
+  for(var in vars) {
     x <- train[[var]]
 
     if(inherits(x, "custom_factor") || inherits(x, "variate")) {

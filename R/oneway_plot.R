@@ -1,4 +1,4 @@
-oneway_plot <- function(df, colors) {
+oneway_plot <- function(df, colors, label_prefix = NULL) {
   stopifnot(inherits(df, "data.frame"))
 
   x_col <- names(df)[1]
@@ -26,7 +26,7 @@ oneway_plot <- function(df, colors) {
     ggplot2::scale_color_manual(values = colors) +
     ggplot2::scale_x_discrete(name = NULL) +
     ggplot2::scale_y_continuous(name = NULL) +
-    ggplot2::ggtitle(label = x_col) +
+    ggplot2::ggtitle(label = paste0(label_prefix, x_col)) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(hjust = 0.45),
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)

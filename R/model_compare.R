@@ -31,15 +31,15 @@ model_compare <- function(setup, with, type = c("factors", "tests")) {
     orig_order <- x$orig_level
 
     x <- x %>%
-      dplyr::select(!!var_symbol := orig_level, weight_sum = weight, current_model_avg = model_avg_lin_rescaled)
+      dplyr::select(!!var_symbol := orig_level, weight_sum = weight, current = model_avg_lin_rescaled)
 
     y <- y %>%
-      dplyr::select(!!var_symbol := orig_level, ref_model_avg = model_avg_lin_rescaled)
+      dplyr::select(!!var_symbol := orig_level, reference = model_avg_lin_rescaled)
 
     x %>%
       dplyr::left_join(y, by = c(var_name)) %>%
       dplyr::mutate(!!var_symbol := factor(!!var_symbol, levels = orig_order)) %>%
-      oneway_plot(colors = c("#99FF00", "#42b3f4"))
+      oneway_plot(colors = c("#99FF00", "#42b3f4"), label_prefix = "Linear Rescaled - ")
   })
 
 }

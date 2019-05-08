@@ -2,11 +2,11 @@ target_dist <- function(setup, without_zero = FALSE, ...) {
   stopifnot(inherits(setup, "setup"))
 
   train <- setup$data_train %>%
-    mutate(train_test = "train")
+    dplyr::mutate(train_test = "train")
 
   if(!is.null(setup$data_test)) {
     test <- setup$data_test %>%
-      mutate(train_test = "test")
+      dplyr::mutate(train_test = "test")
 
   } else {
     test <- NULL
@@ -20,7 +20,7 @@ target_dist <- function(setup, without_zero = FALSE, ...) {
 
   if(without_zero) {
     combined_df <- combined_df %>%
-      filter(!near(!!target_sym, 0))
+      dplyr::filter(!near(!!target_sym, 0))
   }
 
   ggplot2::ggplot(data = combined_df, ggplot2::aes(x = train_test, y = !!target_sym)) +
