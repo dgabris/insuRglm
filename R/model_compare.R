@@ -39,6 +39,7 @@ model_compare <- function(setup, with, type = c("factors", "tests")) {
     x %>%
       dplyr::left_join(y, by = c(var_name)) %>%
       dplyr::mutate(!!var_symbol := factor(!!var_symbol, levels = orig_order)) %>%
+      dplyr::mutate(geom_text_label = "") %>%
       oneway_plot(colors = c("#99FF00", "#42b3f4"), label_prefix = "Linear Rescaled - ")
   })
 

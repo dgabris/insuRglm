@@ -32,7 +32,8 @@ model_visualize <- function(setup, y_axis = c("predicted", "linear"), rescaled =
       orig_order <- x$orig_level
 
       x <- x %>%
-        dplyr::select(!!var_symbol := orig_level, weight_sum = weight, dplyr::ends_with(pattern)) %>%
+        dplyr::select(!!var_symbol := orig_level, weight_sum = weight,
+                      dplyr::ends_with(pattern), geom_text_label) %>%
         dplyr::mutate(!!var_symbol := factor(!!var_symbol, levels = orig_order)) %>%
         purrr::set_names(stringr::str_replace(names(.), pattern, "")) %>%
         dplyr::rename(pred_base_levels = model_avg) %>%

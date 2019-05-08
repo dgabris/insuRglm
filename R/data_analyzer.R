@@ -43,6 +43,7 @@ data_analyzer <- function(setup, factors = NULL, second_dim = NULL, type = c("gr
       lapply(function(x) {
         x %>%
           dplyr::select(-target_sum) %>%
+          dplyr::mutate(geom_text_label = "") %>%
           oneway_plot(colors = c("#CC79A7"))
       })
 

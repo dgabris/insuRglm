@@ -10,7 +10,8 @@ compute_model_avg <- function(x, x_betas) {
       model_avg_pred_nonrescaled = rep(NA_real_, length(orig_levels)),
       model_avg_lin_nonrescaled = rep(NA_real_, length(orig_levels)),
       model_avg_pred_rescaled = rep(NA_real_, length(orig_levels)),
-      model_avg_lin_rescaled = rep(NA_real_, length(orig_levels))
+      model_avg_lin_rescaled = rep(NA_real_, length(orig_levels)),
+      geom_text_label = rep("", length(orig_levels))
     )
 
     return(model_avg_df)
@@ -74,5 +75,6 @@ compute_model_avg <- function(x, x_betas) {
     dplyr::select(-estimate)
   }
 
-  model_avg_df
+  model_avg_df %>%
+    dplyr::mutate(geom_text_label = paste0(round((model_avg_pred_rescaled - 1) * 100), "%"))
 }
