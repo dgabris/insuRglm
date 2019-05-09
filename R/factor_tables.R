@@ -12,7 +12,8 @@ factor_tables <- function(setup, betas, predictions) {
   vars <- c(predictors, setdiff(simple_factors, predictors))
   factor_tables <- list()
 
-  for(var in vars) {
+  for(i in seq_along(vars)) {
+    var <- vars[[i]]
     x <- train[[var]]
 
     if(inherits(x, "custom_factor") || inherits(x, "variate")) {
@@ -36,7 +37,8 @@ factor_tables <- function(setup, betas, predictions) {
     dplyr::left_join(fitted_avg, by = c("orig_level")) %>%
     dplyr::left_join(model_avg, by = c("orig_level"))
 
-    factor_tables[[var]] <- one_table
+    nm <- paste0(i, " - ", var)
+    factor_tables[[nm]] <- one_table
   }
 
   factor_tables

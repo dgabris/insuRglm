@@ -35,7 +35,10 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL,
 
   for(var in simple_factors) {
     data_train[[var]] <- simple_factor(data_train[[var]], data_train[[weight]])
-    data_test[[var]] <- simple_factor(data_test[[var]], data_test[[weight]])
+
+    if(!is.null(data_test)) {
+      data_test[[var]] <- simple_factor(data_test[[var]], data_test[[weight]])
+    }
   }
 
   setup <- structure(
@@ -45,8 +48,8 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL,
       family = family,
       simple_factors = simple_factors,
       seed = seed,
-      data_train = tibble::as.tibble(data_train),
-      data_test = tibble::as.tibble(data_test),
+      data_train = tibble::as_tibble(data_train),
+      data_test = if(!is.null(data_test)) tibble::as_tibble(data_test) else NULL,
       current_model = list(predictors = NULL)
     ),
     class = "setup"

@@ -9,7 +9,7 @@ model_choose <- function(setup, name = NULL) {
   setup$ref_models <- NULL
 
   # combine train and test for the final model fit
-  setup$data_train <- dplyr::bindrows(setup$data_train, setup$data_test)
+  setup$data_train <- dplyr::bind_rows(setup$data_train, setup$data_test)
   setup$data_test <- NULL
 
   class(setup) <- c("final_model", class(setup))
