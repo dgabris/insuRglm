@@ -1,33 +1,42 @@
-model_lift <- function(setup, buckets = 10) {
+model_lift <- function(setup, train_test = c("train", "test"), model = c("current", "all"), buckets = 10) {
+
   stopifnot(inherits(setup, "setup"))
   stopifnot(is.numeric(buckets) || is.integer(buckets))
+  train_test <- match.arg(train_test)
+  if(train_test == "test") stopifnot(!is.null(setup$data_test))
+  model <- match.arg(model)
 
-  weight <- setup$data_train[[setup$weight]]
-  actual <- setup$data_train[[setup$target]]
-  expected <- setup$current_model$train_predictions
+  if(train_test == "train") {
+    actual <- setup$data_train[[setup$target]]
+    weight <- setup$data_train[[setup$weight]]
+  } else {
+    actual <- setup$data_test[[setup$target]]
+    weight <- setup$data_test[[setup$weight]]
+  }
 
-  deciles <- dplyr::bind_cols(
-    weight = weight,
-    actual = actual,
-    expected = expected
-  ) %>%
-  dplyr::mutate(
-    bucket = findInterval(
-      expected,
-      quantile(expected, probs = seq(0, 1, by = 1 / buckets)),
-      all.inside = TRUE
-    )
-  ) %>%
-  dplyr::group_by(bucket) %>%
-  dplyr::summarize(
-    actual = sum(actual * weight) / sum(weight),
-    expected = sum(expected * weight) / sum(weight)
-  ) %>%
-  dplyr::ungroup() %>%
-  tidyr::gather(key = type, value = target, actual, expected)
+  model_list <- list()
 
-  deciles %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.factor(bucket), y = target)) +
-    ggplot2::geom_bar(ggplot2::aes(fill = type), stat = "identity", position = "dodge") +
-    ggplot2::labs(x = "Bucket", y = "Target", fill = "Type")
+  if(model == "all") {
+    for(ref_model_nm in names(setup$ref_models)) {
+      model_list[[ref_model_nm]] <- setup$ref_models[[ref_model_nm]]
+    }
+  }
+
+  model_list$current_model <- setup$current_model
+
+  lapply(names(model_list), function(x) {
+    model_nm <- x
+    model <- model_list[[model_nm]]
+
+    if(train_test == "train") {
+      expected <- model$train_predictions
+    } else {
+      expected <- model$test_predictions
+    }
+
+    lift_plot(actual, expected, weight, buckets, paste0(model_nm, " (", train_test, ")"))
+
+  })
+
+
 }

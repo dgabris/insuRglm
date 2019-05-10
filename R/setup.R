@@ -33,11 +33,15 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL,
     tweedie = statmod::tweedie(var.power = tweedie_p, link.power = 0)
   )
 
+  all_data <- dplyr::bind_rows(data_train, data_test)
+
   for(var in simple_factors) {
-    data_train[[var]] <- simple_factor(data_train[[var]], data_train[[weight]])
+    orig_levels <- levels(all_data[[var]])
+
+    data_train[[var]] <- simple_factor(data_train[[var]], data_train[[weight]], orig_levels = orig_levels)
 
     if(!is.null(data_test)) {
-      data_test[[var]] <- simple_factor(data_test[[var]], data_test[[weight]])
+      data_test[[var]] <- simple_factor(data_test[[var]], data_test[[weight]], orig_levels = orig_levels)
     }
   }
 

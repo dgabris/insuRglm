@@ -7,31 +7,44 @@ model_fit <- function(setup) {
 
   vars <- c(target, weight, predictors)
   train <- setup$data_train[vars]
+
+  test_exists <- !is.null(setup$data_test)
+  test <- if(test_exists) setup$data_test[vars] else NULL
+
   weight_vector <- if(is.null(weight)) rep(1, nrow(train)) else train[[weight]]
 
   predictors_collapsed <- paste0(predictors, collapse = " + ")
   formula <- as.formula(paste0(target, " ~ ", predictors_collapsed))
   family <- setup$family
 
-  # prepare simple factors, custom factors and variates for modeling
-  for(var in predictors) {
-    x <- train[[var]]
+  df_list <- lapply(list(train = train, test = test), function(df) {
 
-    if(inherits(x, "custom_factor")) {
-      mapping <- attr(x, "mapping")
-      train[[var]] <- mapping[as.character(x)]
-      train[[var]] <- as.factor(train[[var]])
+    for(var in predictors) {
+      x <- df[[var]]
 
-    } else if(inherits(x, "variate")) {
-      mapping <- attr(x, "mapping")
-      train[[var]] <- mapping[as.character(x)]
-      train[[var]] <- as.numeric(train[[var]])
+      if(inherits(x, "custom_factor")) {
+        mapping <- attr(x, "mapping")
+        df[[var]] <- mapping[as.character(x)]
+        df[[var]] <- as.factor(df[[var]])
 
-    } else if(inherits(x, "simple_factor")) {
-      model_levels <- attr(x, "model_levels")
-      levels(train[[var]]) <- model_levels
+      } else if(inherits(x, "variate")) {
+        mapping <- attr(x, "mapping")
+        df[[var]] <- mapping[as.character(x)]
+        df[[var]] <- as.numeric(df[[var]])
+
+      } else if(inherits(x, "simple_factor")) {
+        #browser()
+        model_levels <- attr(x, "model_levels")
+        levels(df[[var]]) <- model_levels
+      }
     }
-  }
+
+    df
+
+  })
+
+  train <- df_list$train
+  test <- if(test_exists) df_list$test else NULL
 
   glm <- glm(
     formula = formula,
@@ -43,7 +56,7 @@ model_fit <- function(setup) {
   betas <- betas(predictors, broom::tidy(glm))
   model_stats <- broom::glance(glm)
   train_predictions <- predict(glm, newdata = train, type = "response")
-  #test_predictions <- predict(glm, newdata = test, type = "response)
+  test_predictions <- if(test_exists) predict(glm, newdata = test, type = "response") else NULL
   factor_tables <- factor_tables(setup, betas, train_predictions)
   relativities <- relativities(factor_tables)
 
@@ -53,7 +66,8 @@ model_fit <- function(setup) {
     model_stats = model_stats,
     factor_tables = factor_tables,
     relativities = relativities,
-    train_predictions = train_predictions
+    train_predictions = train_predictions,
+    test_predictions = test_predictions
   )
 
   if(!inherits(setup, "modeling")) {
