@@ -14,8 +14,11 @@ setup <- setup(
 )
 
 target_dist(setup)
-target_dist(setup, weighted = FALSE)
+target_dist(setup, weighted = TRUE)
 target_dist(setup, without_zero = TRUE)
+target_dist(setup, upper_limit = 5000)
+target_dist(setup, lower_limit = 5000)
+target_dist(setup, lower_limit = 5000, upper_limit = 6000)
 
 data_analyzer(setup, type = "table")
 data_analyzer(setup, type = "graph")

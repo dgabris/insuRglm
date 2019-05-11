@@ -1,6 +1,9 @@
-target_dist <- function(setup, weighted = TRUE, without_zero = FALSE, cap_at = NULL, ...) {
+target_dist <- function(setup, weighted = FALSE, without_zero = FALSE,
+                        lower_limit = NULL, upper_limit = NULL, ...) {
+
   stopifnot(inherits(setup, "setup"))
-  if(!is.null(cap_at)) stopifnot(is.numeric(cap_at) || is.integer(cap_at))
+  if(!is.null(lower_limit)) stopifnot(is.numeric(lower_limit) || is.integer(lower_limit))
+  if(!is.null(upper_limit)) stopifnot(is.numeric(upper_limit) || is.integer(upper_limit))
 
   test_exists <- !is.null(setup$data_test)
   weight_exists <- !is.null(setup$weight)
@@ -32,12 +35,16 @@ target_dist <- function(setup, weighted = TRUE, without_zero = FALSE, cap_at = N
       dplyr::filter(!near(target, 0))
   }
 
-  if(!is.null(cap_at)) {
-    combined_df <- combined_df %>%
-      dplyr::mutate(target = if_else(target > cap_at, cap_at, target))
+  g <- ggplot2::ggplot(data = combined_df, ggplot2::aes(x = train_test, y = target)) +
+    ggplot2::geom_violin(ggplot2::aes(weight = weight, fill = train_test), ...)
+
+  if(!is.null(lower_limit) || !is.null(upper_limit)) {
+    lower_limit <- if(is.null(lower_limit)) pmin(min(train_target), min(test_target)) else lower_limit
+    upper_limit <- if(is.null(upper_limit)) pmax(max(train_target), max(test_target)) else upper_limit
+
+    g <- g + ggplot2::coord_cartesian(ylim = c(lower_limit, upper_limit))
   }
 
-  ggplot2::ggplot(data = combined_df, ggplot2::aes(x = train_test, y = target)) +
-    ggplot2::geom_violin(ggplot2::aes(weight = weight, fill = train_test), ...)
+  g
 
 }
