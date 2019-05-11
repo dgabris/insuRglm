@@ -9,9 +9,14 @@ remap_predictors <- function(df_list, predictors) {
       x <- df[[var]]
 
       if(inherits(x, "custom_factor")) {
+
         mapping <- attr(x, "mapping")
+        base_level <- attr(x, "base_level")
+        new_base_level <- as.character(mapping[[which(names(mapping) == base_level)]])
+
         df[[var]] <- mapping[as.character(x)]
         df[[var]] <- as.factor(df[[var]])
+        df[[var]] <- forcats::fct_relevel(df[[var]], new_base_level)
 
       } else if(inherits(x, "variate")) {
         mapping <- attr(x, "mapping")
