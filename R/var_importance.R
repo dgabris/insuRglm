@@ -15,8 +15,8 @@ var_importance <- function(setup, direction = c("backward", "forward", "both"), 
     x <- train[[var]]
 
     stopifnot(inherits(x, "simple_factor"))
-
-    levels(train[[var]]) <- attr(x, "model_levels")
+    base_level <- attr(x, "base_level")
+    train[[var]] <- forcats::fct_relevel(x, base_level)
   }
 
   glm <- glm(

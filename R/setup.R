@@ -36,14 +36,27 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL,
   all_data <- dplyr::bind_rows(data_train, data_test)
 
   for(var in simple_factors) {
-    orig_levels <- levels(all_data[[var]])
 
-    data_train[[var]] <- simple_factor(data_train[[var]], data_train[[weight]], orig_levels = orig_levels)
+    orig_levels <- levels(all_data[[var]])
+    levels_by_weight <- names(sort(tapply(all_data[[weight]], all_data[[var]], sum), decreasing = TRUE))
+    base_level <- levels_by_weight[[1]]
+
+    data_train[[var]] <- simple_factor(data_train[[var]], orig_levels, base_level)
 
     if(!is.null(data_test)) {
-      data_test[[var]] <- simple_factor(data_test[[var]], data_test[[weight]], orig_levels = orig_levels)
+      data_test[[var]] <- simple_factor(data_test[[var]], orig_levels, base_level)
     }
   }
+
+  current_model <- structure(
+    list(
+      target = target,
+      weight = weight,
+      family = family,
+      predictors = NULL
+    ),
+    class = "unfitted_model"
+  )
 
   setup <- structure(
     list(
@@ -54,7 +67,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL,
       seed = seed,
       data_train = tibble::as_tibble(data_train),
       data_test = if(!is.null(data_test)) tibble::as_tibble(data_test) else NULL,
-      current_model = list(predictors = NULL)
+      current_model = current_model
     ),
     class = "setup"
   )

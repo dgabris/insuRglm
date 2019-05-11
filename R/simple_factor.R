@@ -1,18 +1,11 @@
-simple_factor <- function(x, exposure, orig_levels) {
+simple_factor <- function(x, orig_levels, base_level) {
   stopifnot(inherits(x, "factor"))
-  stopifnot(length(x) == length(exposure))
-  stopifnot(is.numeric(exposure))
-  stopifnot(all(!is.na(exposure)))
+  stopifnot(is.character(orig_levels))
+  stopifnot(is.character(base_level) && length(base_level) == 1)
 
-  sorted_by_exposure <- names(sort(tapply(exposure, x, sum), decreasing = TRUE))
-  model_base_level <- sorted_by_exposure[[1]]
-  model_base_level_ind <- which(orig_levels == model_base_level)
-  model_levels <- c(model_base_level, orig_levels[-model_base_level_ind])
-
-  levels(x) <- orig_levels
+  x <- factor(as.character(x), levels = orig_levels)
   attr(x, "orig_levels") <- orig_levels
-
-  attr(x, "model_levels") <- model_levels
+  attr(x, "base_level") <- base_level
 
   class(x) <- c("simple_factor", class(x))
 

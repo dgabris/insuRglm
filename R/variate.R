@@ -25,7 +25,7 @@ variate <- function(x, type = c("prop", "non_prop"), mapping = NULL) {
 
   }
 
-  base_level <- attr(x, "model_levels")[[1]]
+  base_level <- attr(x, "base_level")
   base_level_val <- mapping[[which(names(mapping) == base_level)]]
   mapping <- mapping - base_level_val
 
