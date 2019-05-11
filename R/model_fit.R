@@ -17,31 +17,7 @@ model_fit <- function(setup) {
   formula <- as.formula(paste0(target, " ~ ", predictors_collapsed))
   family <- setup$family
 
-  df_list <- lapply(list(train = train, test = test), function(df) {
-
-    for(var in predictors) {
-      x <- df[[var]]
-
-      if(inherits(x, "custom_factor")) {
-        mapping <- attr(x, "mapping")
-        df[[var]] <- mapping[as.character(x)]
-        df[[var]] <- as.factor(df[[var]])
-
-      } else if(inherits(x, "variate")) {
-        mapping <- attr(x, "mapping")
-        df[[var]] <- mapping[as.character(x)]
-        df[[var]] <- as.numeric(df[[var]])
-
-      } else if(inherits(x, "simple_factor")) {
-        #browser()
-        model_levels <- attr(x, "model_levels")
-        levels(df[[var]]) <- model_levels
-      }
-    }
-
-    df
-
-  })
+  df_list <- remap_predictors(list(train = train, test = test), predictors)
 
   train <- df_list$train
   test <- if(test_exists) df_list$test else NULL
@@ -60,14 +36,20 @@ model_fit <- function(setup) {
   factor_tables <- factor_tables(setup, betas, train_predictions)
   relativities <- relativities(factor_tables)
 
-  setup$current_model <- list(
-    predictors = predictors,
-    betas = betas,
-    model_stats = model_stats,
-    factor_tables = factor_tables,
-    relativities = relativities,
-    train_predictions = train_predictions,
-    test_predictions = test_predictions
+  setup$current_model <- structure(
+    list(
+      target = target,
+      weight = weight,
+      family = family,
+      predictors = predictors,
+      betas = betas,
+      model_stats = model_stats,
+      factor_tables = factor_tables,
+      relativities = relativities,
+      train_predictions = train_predictions,
+      test_predictions = test_predictions
+    ),
+    class = "fitted_model"
   )
 
   if(!inherits(setup, "modeling")) {
