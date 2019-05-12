@@ -51,7 +51,6 @@ compute_model_avg <- function(x, x_betas) {
       actual_level = unname(mapping),
       estimate = rep(estimate, length(mapping))
     ) %>%
-    #dplyr::mutate_at(c("actual_level", "estimate"), as.numeric) %>%
     dplyr::mutate(
       model_avg_pred_nonrescaled = exp(intercept_estimate) * exp(estimate * actual_level),
       model_avg_lin_nonrescaled = intercept_estimate + (estimate * actual_level),
@@ -59,6 +58,36 @@ compute_model_avg <- function(x, x_betas) {
       model_avg_lin_rescaled = estimate * actual_level
     ) %>%
     dplyr::select(-actual_level, -estimate)
+
+  } else if(inherits(x, "interaction")) {
+    mapping <- attr(x, "mapping")
+
+    model_avg_df <- dplyr::bind_cols(
+      orig_level = names(mapping),
+      actual_level = unname(mapping),
+      intercept_estimate = rep(intercept_estimate, length(mapping))
+    ) %>%
+    dplyr::left_join(main_rows, by = c("actual_level")) %>%
+    dplyr::rename(interaction_estimate = estimate) %>%
+    dplyr::mutate(interaction_estimate = coalesce(interaction_estimate, 0)) %>%
+    tidyr::separate(orig_level, into = c("main1", "main2"), sep = "\\.", remove = FALSE) %>%
+    dplyr::left_join(main_rows, by = c("main1" = "actual_level")) %>%
+    dplyr::rename(main1_estimate = estimate) %>%
+    dplyr::mutate(main1_estimate = coalesce(main1_estimate, 0)) %>%
+    dplyr::left_join(main_rows, by = c("main2" = "actual_level")) %>%
+    dplyr::rename(main2_estimate = estimate) %>%
+    dplyr::mutate(main2_estimate = coalesce(main2_estimate, 0)) %>%
+    dplyr::mutate(
+      model_avg_pred_nonrescaled =
+        exp(intercept_estimate) * exp(main1_estimate) * exp(main2_estimate) * exp(interaction_estimate),
+      model_avg_lin_nonrescaled =
+        intercept_estimate + main1_estimate + main2_estimate + interaction_estimate,
+      model_avg_pred_rescaled =
+        exp(main1_estimate) * exp(main2_estimate) * exp(interaction_estimate),
+      model_avg_lin_rescaled =
+        main1_estimate + main2_estimate + interaction_estimate
+    ) %>%
+    dplyr::select(orig_level, starts_with("model_avg"))
 
   } else if(inherits(x, "simple_factor")) {
     model_avg_df <- tibble::tibble(

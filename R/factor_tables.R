@@ -13,10 +13,11 @@ factor_tables <- function(setup, betas, predictions) {
   factor_tables <- list()
 
   for(i in seq_along(vars)) {
+
     var <- vars[[i]]
     x <- train[[var]]
 
-    if(inherits(x, "custom_factor") || inherits(x, "variate")) {
+    if(inherits(x, "custom_factor") || inherits(x, "variate") ||inherits(x, "interaction")) {
       mapping <- attr(x, "mapping")
     } else {
       orig_levels <- attr(x, "orig_levels")
@@ -26,7 +27,17 @@ factor_tables <- function(setup, betas, predictions) {
     obs_avg <- compute_obs_avg(x, target_vector, weight_vector)
     fitted_avg <- compute_fitted_avg(x, predictions, weight_vector)
 
-    x_betas <- betas %>% dplyr::filter(factor %in% c(var, "(Intercept)"))
+    if(inherits(x, "interaction")) {
+      interaction_var <- var
+      main_vars <- unlist(stringr::str_split(interaction_var, "\\*"))
+
+      x_betas <- betas %>%
+        dplyr::filter(factor %in% c("(Intercept)", interaction_var, main_vars))
+
+    } else {
+      x_betas <- betas %>% dplyr::filter(factor %in% c("(Intercept)", var))
+    }
+
     model_avg <- compute_model_avg(x, x_betas)
 
     one_table <- dplyr::bind_cols(
