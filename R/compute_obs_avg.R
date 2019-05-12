@@ -1,9 +1,7 @@
 compute_obs_avg <- function(x, target_vector, weight_vector) {
-  # TODO determine logic for picking base level in presence of custom factor / variate
-  # TODO determine whether it makes sense to compute rescaled value for observed average
 
   orig_levels <- attr(x, "orig_levels")
-  base_model_level <- orig_levels[[1]]
+  base_model_level <- attr(x, "base_level")
 
   obs_avg_df <- dplyr::bind_cols(x = x, target = target_vector, weight = weight_vector) %>%
     dplyr::group_by(x) %>%

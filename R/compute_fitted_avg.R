@@ -1,9 +1,7 @@
 compute_fitted_avg <- function(x, predictions, weight_vector) {
-  # TODO determine logic for picking base level in presence of custom factor / variate
-  # TODO determine whether it makes sense to compute rescaled value for fitted average
 
   orig_levels <- attr(x, "orig_levels")
-  base_model_level <- orig_levels[[1]]
+  base_model_level <- attr(x, "base_level")
 
   fitted_avg_df <- dplyr::bind_cols(x = x, target = predictions, weight = weight_vector) %>%
     dplyr::group_by(x) %>%
