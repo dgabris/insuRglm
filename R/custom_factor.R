@@ -8,7 +8,7 @@ custom_factor <- function(x, mapping) {
   }
 
   attr(x, "mapping") <- mapping
-  class(x) <- c("custom_factor", class(x))
+  class(x) <- if(!inherits(x, "custom_factor")) c("custom_factor", class(x)) else class(x)
 
   x
 }

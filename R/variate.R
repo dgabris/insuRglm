@@ -30,7 +30,7 @@ variate <- function(x, type = c("prop", "non_prop"), mapping = NULL) {
   mapping <- mapping - base_level_val
 
   attr(x, "mapping") <- mapping
-  class(x) <- c("variate", class(x))
+  class(x) <- if(!inherits(x, "variate")) c("variate", class(x)) else class(x)
 
   x
 }
