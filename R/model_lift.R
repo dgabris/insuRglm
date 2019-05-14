@@ -1,4 +1,4 @@
-model_lift <- function(setup, method = c("train", "crossval", "test"),
+model_lift <- function(setup, method = c("train", "crossval", "test"), cv_stratified = FALSE,
                        cv_folds = 10, model = c("current", "all"), buckets = 10) {
 
   stopifnot(inherits(setup, "setup"))
@@ -49,7 +49,7 @@ model_lift <- function(setup, method = c("train", "crossval", "test"),
       expected <- model$train_predictions
 
     } else if(method == "crossval") {
-      expected <- crossval_predict(setup$data_train, model, cv_folds)
+      expected <- crossval_predict(setup$data_train, model, cv_folds, cv_stratified)
 
     } else {
       expected <- model$test_predictions
