@@ -1,24 +1,41 @@
 compute_model_avg <- function(x, x_betas) {
 
-  # when a variable is NOT a predictor, x_betas will be intercept only
-  # in that case return df with NAs
+  intercept_row <- x_betas %>% dplyr::filter(factor == "(Intercept)")
+  intercept_estimate <- intercept_row$estimate[[1]]
+
+  # when x_betas contains intercept only, variable is either NOT predictor, or an offset
   if(nrow(x_betas) == 1) {
     orig_levels <- attr(x, "orig_levels")
 
-    model_avg_df <- dplyr::bind_cols(
-      orig_level = orig_levels,
-      model_avg_pred_nonrescaled = rep(NA_real_, length(orig_levels)),
-      model_avg_lin_nonrescaled = rep(NA_real_, length(orig_levels)),
-      model_avg_pred_rescaled = rep(NA_real_, length(orig_levels)),
-      model_avg_lin_rescaled = rep(NA_real_, length(orig_levels)),
-      geom_text_label = rep("", length(orig_levels))
-    )
+    if(inherits(x, "offset")) {
+
+      estimate <- unname(attr(x, "mapping"))
+
+      model_avg_df <- dplyr::bind_cols(
+        orig_level = orig_levels,
+        estimate = estimate,
+        model_avg_pred_nonrescaled = exp(intercept_estimate) * exp(estimate),
+        model_avg_lin_nonrescaled = intercept_estimate + estimate,
+        model_avg_pred_rescaled = exp(estimate),
+        model_avg_lin_rescaled = estimate
+      ) %>%
+      dplyr::mutate(geom_text_label = paste0(round((model_avg_pred_rescaled - 1) * 100), "%"))
+
+    } else {
+
+      model_avg_df <- dplyr::bind_cols(
+        orig_level = orig_levels,
+        model_avg_pred_nonrescaled = rep(NA_real_, length(orig_levels)),
+        model_avg_lin_nonrescaled = rep(NA_real_, length(orig_levels)),
+        model_avg_pred_rescaled = rep(NA_real_, length(orig_levels)),
+        model_avg_lin_rescaled = rep(NA_real_, length(orig_levels)),
+        geom_text_label = rep("", length(orig_levels))
+      )
+
+    }
 
     return(model_avg_df)
   }
-
-  intercept_row <- x_betas %>% dplyr::filter(factor == "(Intercept)")
-  intercept_estimate <- intercept_row$estimate[[1]]
 
   main_rows <- x_betas %>% dplyr::filter(factor != "(Intercept)") %>%
     dplyr::select(actual_level, estimate)

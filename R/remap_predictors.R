@@ -20,6 +20,7 @@ remap_predictors <- function(df_list, predictors) {
 
       } else if(inherits(x, "variate")) {
         mapping <- attr(x, "mapping")
+
         df[[var]] <- mapping[as.character(x)]
         df[[var]] <- as.numeric(df[[var]])
 
@@ -30,6 +31,12 @@ remap_predictors <- function(df_list, predictors) {
         df[[var]] <- mapping[as.character(x)]
         df[[var]] <- as.factor(df[[var]])
         df[[var]] <- forcats::fct_relevel(df[[var]], base_level)
+
+      } else if(inherits(x, "offset")) {
+        mapping <- attr(x, "mapping")
+
+        df[[var]] <- mapping[as.character(x)]
+        df[[var]] <- as.numeric(df[[var]])
 
       } else if(inherits(x, "simple_factor")) {
         base_level <- attr(x, "base_level")

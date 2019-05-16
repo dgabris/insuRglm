@@ -17,7 +17,8 @@ factor_tables <- function(setup, betas, predictions) {
     var <- vars[[i]]
     x <- train[[var]]
 
-    if(inherits(x, "custom_factor") || inherits(x, "variate") ||inherits(x, "interaction")) {
+    if(inherits(x, "custom_factor") || inherits(x, "variate") ||
+       inherits(x, "interaction") || inherits(x, "offset")) {
       mapping <- attr(x, "mapping")
     } else {
       orig_levels <- attr(x, "orig_levels")

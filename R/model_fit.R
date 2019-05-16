@@ -13,16 +13,25 @@ model_fit <- function(setup) {
 
   weight_vector <- if(is.null(weight)) rep(1, nrow(train)) else train[[weight]]
 
-  predictors_with_space <- paste0("`", predictors, " `")
-  predictors_collapsed <- paste0(predictors_with_space, collapse = " + ")
-  formula <- as.formula(paste0(target, " ~ ", predictors_collapsed))
-
-  family <- setup$family
+  offset_class <- vapply(train, function(x) inherits(x, "offset"), logical(1))
 
   df_list <- remap_predictors(list(train = train, test = test), predictors)
 
   train <- df_list$train
   test <- if(test_exists) df_list$test else NULL
+
+  predictors_with_space <- paste0("`", predictors, " `")
+
+  if(any(offset_class)) {
+    offset_names <- names(offset_class)[offset_class]
+    offset_index <- which(predictors == offset_names)
+    predictors_with_space[offset_index] <- paste0("offset(", predictors_with_space[offset_index], ")")
+  }
+
+  predictors_collapsed <- paste0(predictors_with_space, collapse = " + ")
+  formula <- as.formula(paste0(target, " ~ ", predictors_collapsed))
+
+  family <- setup$family
 
   tw <- c(target, weight)
   colnames(train) <- c(tw, paste0(setdiff(colnames(train), tw), " "))

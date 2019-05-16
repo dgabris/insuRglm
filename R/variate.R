@@ -3,6 +3,7 @@ variate <- function(x, type = c("prop", "non_prop"), mapping = NULL) {
   stopifnot(inherits(x, "simple_factor"))
   type <- match.arg(type)
   if(!is.null(mapping)) stopifnot(is.numeric(mapping) || is.integer(mapping))
+  if(!is.null(mapping)) stopifnot(length(attr(x, "orig_levels")) == length(mapping))
 
   orig_levels <- attr(x, "orig_levels")
   num_levels <- length(orig_levels)
