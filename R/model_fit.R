@@ -13,14 +13,20 @@ model_fit <- function(setup) {
 
   weight_vector <- if(is.null(weight)) rep(1, nrow(train)) else train[[weight]]
 
-  predictors_collapsed <- paste0(predictors, collapse = " + ")
+  predictors_with_space <- paste0("`", predictors, " `")
+  predictors_collapsed <- paste0(predictors_with_space, collapse = " + ")
   formula <- as.formula(paste0(target, " ~ ", predictors_collapsed))
+
   family <- setup$family
 
   df_list <- remap_predictors(list(train = train, test = test), predictors)
 
   train <- df_list$train
   test <- if(test_exists) df_list$test else NULL
+
+  tw <- c(target, weight)
+  colnames(train) <- c(tw, paste0(setdiff(colnames(train), tw), " "))
+  colnames(test) <- c(tw, paste0(setdiff(colnames(test), tw), " "))
 
   glm <- glm(
     formula = formula,
