@@ -31,12 +31,29 @@ model_visualize <- function(setup, y_axis = c("predicted", "linear"), rescaled =
       var_symbol <- rlang::sym(x$factor[[1]])
       orig_order <- x$orig_level
 
-      x <- x %>%
+      x_prep <- x %>%
         dplyr::select(!!var_symbol := orig_level, weight_sum = weight,
                       dplyr::ends_with(pattern), geom_text_label) %>%
         dplyr::mutate(!!var_symbol := factor(!!var_symbol, levels = orig_order)) %>%
         purrr::set_names(stringr::str_replace(names(.), pattern, "")) %>%
-        dplyr::rename(pred_base_levels = model_avg) %>%
-        oneway_plot(colors = c("#33CC00", "#CC79A7", "#99FF00"), label_prefix = label_prefix)
+        dplyr::rename(pred_base_levels = model_avg)
+
+      x_name <- names(x_prep)[[1]]
+
+      if(stringr::str_detect(x_name, "\\*")) {
+
+      x_sym <- rlang::sym(x_name)
+      main_vars <- stringr::str_split(x_name, "\\*", simplify = TRUE)
+      main_vars[[1]] <- x_name
+
+        x_prep %>%
+          dplyr::select(-obs_avg, -fitted_avg, -geom_text_label) %>%
+          tidyr::separate(!!x_sym, into = main_vars) %>%
+          twoway_plot(label_prefix = label_prefix)
+      } else {
+        x_prep %>%
+          oneway_plot(colors = c("#33CC00", "#CC79A7", "#99FF00"), label_prefix = label_prefix)
+      }
+
     })
 }

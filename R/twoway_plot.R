@@ -1,4 +1,4 @@
-twoway_plot <- function(df) {
+twoway_plot <- function(df, label_prefix = NULL) {
   stopifnot(inherits(df, "data.frame"))
 
   x_cols <- names(df)[c(1, 2)]
@@ -26,7 +26,7 @@ twoway_plot <- function(df) {
     ggplot2::geom_bar(data = weight_df, ggplot2::aes(fill = !!x2_sym), stat = "identity", color = "black") +
     ggplot2::scale_x_discrete(name = NULL) +
     ggplot2::scale_y_continuous(name = NULL) +
-    ggplot2::ggtitle(label = x_cols[[1]]) +
+    ggplot2::ggtitle(label = paste0(label_prefix, x_cols[[1]])) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(hjust = 0.45),
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)

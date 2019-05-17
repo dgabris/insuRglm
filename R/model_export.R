@@ -26,7 +26,7 @@ model_export <- function(setup, xlsx_file, overwrite = FALSE) {
 
   main_sheet_row <- 2 + 2 + 1
   for(i in seq_along(predictor_names)) {
-    predictor_name <- predictor_names[[i]]
+    predictor_name <- stringr::str_replace_all(predictor_names[[i]], "\\*", "-")
     openxlsx::addWorksheet(wb, sheetName = predictor_name)
 
     relativity_df <- tibble::as_data_frame(relativities[[i]])
