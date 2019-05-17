@@ -20,6 +20,7 @@ Imports:
   rlang (>= 0.3.0.1),
   broom (>= 0.5.1),
   statmod (>= 1.4.30),
-  tweedie (>= 2.3.2)
+  tweedie (>= 2.3.2),
+  openxlsx (>= 4.1.0)
   
   

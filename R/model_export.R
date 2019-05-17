@@ -1,5 +1,57 @@
-model_export <- function(setup) {
-  # TODO - export relativities to excel file
+model_export <- function(setup, xlsx_file, overwrite = FALSE) {
 
-  setup$current_model$relativities
+  stopifnot(inherits(setup, "setup"))
+  stopifnot(is.character(xlsx_file))
+
+  main_sheet_name <- "All"
+  image_width_cm <- 20
+  image_height_cm <- 14.5
+
+  if(!stringr::str_detect(xlsx_file, ".xlsx$")) {
+    xlsx_file <- paste0(xlsx_file, ".xlsx")
+  }
+
+  predictor_names <- setup$current_model$predictors
+
+  base_df <- setup$current_model$betas %>%
+    filter(factor == "(Intercept)") %>%
+    select(base = estimate)
+
+  relativities <- setup$current_model$relativities
+  charts <- model_visualize(setup)[seq_len(length(relativities))]
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, sheetName = main_sheet_name)
+  openxlsx::writeDataTable(wb, sheet = main_sheet_name, x = base_df, startRow = 2, startCol = 2)
+
+  main_sheet_row <- 2 + 2 + 1
+  for(i in seq_along(predictor_names)) {
+    predictor_name <- predictor_names[[i]]
+    openxlsx::addWorksheet(wb, sheetName = predictor_name)
+
+    relativity_df <- tibble::as_data_frame(relativities[[i]])
+    nrows_table <- nrow(relativity_df)
+    ncols_table <- ncol(relativity_df)
+
+    openxlsx::writeDataTable(
+      wb, sheet = main_sheet_name, x = relativity_df, startRow = main_sheet_row, startCol = 2
+    )
+
+    main_sheet_row <- main_sheet_row + nrows_table + 1 + 1
+
+    openxlsx::writeDataTable(
+      wb, sheet = predictor_name, x = relativity_df, startRow = 2, startCol = 2
+    )
+
+    image_file <- paste0(tempfile(), ".png")
+    png(image_file, width = image_width_cm, height = image_height_cm, units = "cm", res = 300)
+    print(charts[[i]])
+    dev.off()
+    openxlsx::insertImage(
+      wb, sheet = predictor_name, file = image_file, units = "cm", width = image_width_cm, height = image_height_cm,
+      startRow = 2, startCol = 2 + 1 + ncols_table
+    )
+  }
+
+  suppressMessages(openxlsx::saveWorkbook(wb, file = xlsx_file, overwrite = overwrite))
 }
