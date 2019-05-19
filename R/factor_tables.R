@@ -17,9 +17,14 @@ factor_tables <- function(setup, betas, predictions) {
     var <- vars[[i]]
     x <- train[[var]]
 
-    if(inherits(x, "custom_factor") || inherits(x, "variate") ||
-       inherits(x, "interaction") || inherits(x, "offset")) {
+    if(inherits(x, "custom_factor") || inherits(x, "interaction") ||
+       inherits(x, "offset")) {
       mapping <- attr(x, "mapping")
+
+    } else if(inherits(x, "variate")) {
+      mapping_df <- attr(x, "mapping")
+      mapping <- setNames(mapping_df$actual_level, mapping_df$orig_level)
+
     } else {
       orig_levels <- attr(x, "orig_levels")
       mapping <- setNames(orig_levels, orig_levels)

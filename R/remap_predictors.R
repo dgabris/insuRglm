@@ -19,7 +19,8 @@ remap_predictors <- function(df_list, predictors) {
         df[[var]] <- forcats::fct_relevel(df[[var]], new_base_level)
 
       } else if(inherits(x, "variate")) {
-        mapping <- attr(x, "mapping")
+        mapping_df <- attr(x, "mapping")
+        mapping <- setNames(mapping_df$actual_level, mapping_df$orig_level)
 
         df[[var]] <- mapping[as.character(x)]
         df[[var]] <- as.numeric(df[[var]])

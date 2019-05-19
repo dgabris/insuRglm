@@ -14,6 +14,8 @@ model_fit <- function(setup) {
   weight_vector <- if(is.null(weight)) rep(1, nrow(train)) else train[[weight]]
 
   offset_class <- vapply(train, function(x) inherits(x, "offset"), logical(1))
+  variate_class <- vapply(train, function(x) inherits(x, "variate"), logical(1))
+  variate_degrees <- vapply(train[variate_class], function(x) attr(x, "degree"), numeric(1))
 
   df_list <- remap_predictors(list(train = train, test = test), predictors)
 
@@ -26,6 +28,14 @@ model_fit <- function(setup) {
     offset_names <- names(offset_class)[offset_class]
     offset_index <- which(predictors == offset_names)
     predictors_with_space[offset_index] <- paste0("offset(", predictors_with_space[offset_index], ")")
+  }
+
+  if(any(variate_class)) {
+    variate_names <- names(variate_class)[variate_class]
+    variate_index <- which(predictors == variate_names)
+    predictors_with_space[variate_index] <- paste0(
+      "poly(", predictors_with_space[variate_index], ", degree = ", variate_degrees, ")"
+    )
   }
 
   predictors_collapsed <- paste0(predictors_with_space, collapse = " + ")

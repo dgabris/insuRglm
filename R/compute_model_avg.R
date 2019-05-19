@@ -58,23 +58,32 @@ compute_model_avg <- function(x, x_betas) {
       dplyr::select(-actual_level, -estimate)
 
   } else if(inherits(x, "variate")) {
-    stopifnot(nrow(main_rows) == 1)
 
-    estimate <- main_rows$estimate[[1]]
-    mapping <- attr(x, "mapping")
+    estimates <- main_rows$estimate
+    mapping_df <- attr(x, "mapping")
+    orthogonal_x_vals <- mapping_df %>%
+      dplyr::select(dplyr::contains("orthogonal_degree_"))
+
+    linear_nonrescaled <- rep(intercept_estimate, nrow(mapping_df))
+    for(i in seq_along(estimates)) {
+      linear_nonrescaled <- linear_nonrescaled + (orthogonal_x_vals[[i]] * estimates[[i]])
+    }
+
+    base_level <- attr(x, "base_level")
+    base_level_ind <- which(as.character(mapping_df$orig_level) == base_level)
+    base_level_val <- linear_nonrescaled[[base_level_ind]]
 
     model_avg_df <- dplyr::bind_cols(
-      orig_level = names(mapping),
-      actual_level = unname(mapping),
-      estimate = rep(estimate, length(mapping))
+      orig_level = mapping_df$orig_level,
+      actual_level = mapping_df$actual_level
     ) %>%
     dplyr::mutate(
-      model_avg_pred_nonrescaled = exp(intercept_estimate) * exp(estimate * actual_level),
-      model_avg_lin_nonrescaled = intercept_estimate + (estimate * actual_level),
-      model_avg_pred_rescaled = exp(estimate * actual_level),
-      model_avg_lin_rescaled = estimate * actual_level
+      model_avg_pred_nonrescaled = exp(linear_nonrescaled),
+      model_avg_lin_nonrescaled = linear_nonrescaled,
+      model_avg_pred_rescaled = exp(linear_nonrescaled - base_level_val),
+      model_avg_lin_rescaled = linear_nonrescaled - base_level_val
     ) %>%
-    dplyr::select(-actual_level, -estimate)
+    dplyr::select(-actual_level)
 
   } else if(inherits(x, "interaction")) {
     mapping <- attr(x, "mapping")
@@ -122,5 +131,6 @@ compute_model_avg <- function(x, x_betas) {
   }
 
   model_avg_df %>%
+    dplyr::mutate(orig_level = as.character(orig_level)) %>%
     dplyr::mutate(geom_text_label = paste0(round((model_avg_pred_rescaled - 1) * 100), "%"))
 }
