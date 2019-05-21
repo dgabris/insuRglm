@@ -1,4 +1,4 @@
-variate <- function(x, type = c("prop", "non_prop"), mapping = NULL, degree = 1) {
+variate <- function(x, type = c("prop", "non_prop"), prop_log = TRUE,  mapping = NULL, degree = 1) {
 
   stopifnot(inherits(x, "simple_factor"))
   type <- match.arg(type)
@@ -22,7 +22,7 @@ variate <- function(x, type = c("prop", "non_prop"), mapping = NULL, degree = 1)
 
   } else {
 
-    mapping <- prop_mapping(orig_levels)
+    mapping <- prop_mapping(orig_levels, prop_log)
 
   }
 
