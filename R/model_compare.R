@@ -1,4 +1,4 @@
-model_compare <- function(setup, with, type = c("factors", "tests")) {
+model_compare <- function(setup, with, type = c("1", "2", "3")) {
 
   stopifnot(inherits(setup, "setup"))
   stopifnot(inherits(setup, "modeling"))
@@ -13,34 +13,82 @@ model_compare <- function(setup, with, type = c("factors", "tests")) {
     message("Comparison won't reflect recent changes! Please run 'model_fit()' first.")
   }
 
-  current_factors <- current_model$factor_tables %>%
-    Filter(f = function(x) any(!is.na(x$model_avg_pred_nonrescaled)))
+  model_list <- setup$ref_models[with]
+  model_list$current_model <- current_model
 
-  ref_model <- setup$ref_models[[with]]
-  ref_factors <- ref_model$factor_tables %>%
-    Filter(f = function(x) any(!is.na(x$model_avg_pred_nonrescaled)))
+  intersect_predictors <- model_list %>%
+    lapply(function(x) x$predictors) %>%
+    purrr::reduce(base::intersect)
 
-  stopifnot(length(current_factors) == length(ref_factors))
+  plot_list <- list()
+  if(type == "1") {
+    for(i in seq_along(intersect_predictors)) {
 
-  purrr::pmap(list(current_factors, ref_factors), function(x, y) {
-    stopifnot(x$factor[[1]] == y$factor[[1]])
-    var_name <- x$factor[[1]]
-    var_symbol <- rlang::sym(var_name)
+      predictor <- intersect_predictors[[i]]
+      predictor_sym <- rlang::sym(predictor)
 
-    stopifnot(all(x$orig_level == y$orig_level))
-    orig_order <- x$orig_level
+      base_df <- model_list$current_model$factor_tables[[i]] %>%
+        dplyr::select(!!predictor_sym := orig_level, weight_sum = weight, obs_avg = obs_avg_pred_nonrescaled)
 
-    x <- x %>%
-      dplyr::select(!!var_symbol := orig_level, weight_sum = weight, current = model_avg_lin_rescaled)
+      orig_order <- base_df[[predictor]]
 
-    y <- y %>%
-      dplyr::select(!!var_symbol := orig_level, reference = model_avg_lin_rescaled)
+      for(model_nm in names(model_list)) {
 
-    x %>%
-      dplyr::left_join(y, by = c(var_name)) %>%
-      dplyr::mutate(!!var_symbol := factor(!!var_symbol, levels = orig_order)) %>%
-      dplyr::mutate(geom_text_label = "") %>%
-      oneway_plot(colors = c("#99FF00", "#42b3f4"), label_prefix = "Linear Rescaled - ")
-  })
+        model_nm_sym <- rlang::sym(paste0(model_nm, "_fitted_avg"))
+
+        join_df <- model_list[[model_nm]]$factor_tables[[i]] %>%
+          dplyr::select(!!predictor_sym := orig_level, !!model_nm_sym := fitted_avg_pred_nonrescaled)
+
+        base_df <- base_df %>%
+          left_join(join_df, by = c(predictor))
+      }
+
+      colors <- setNames(
+        c("#CC79A7", my_colors()[seq_len(length(model_list) - 1)], "#33CC00"),
+        c("obs_avg", paste0(names(model_list), "_fitted_avg"))
+      )
+
+      plot_list[[predictor]] <- base_df %>%
+        dplyr::mutate(!!predictor_sym := factor(!!predictor_sym, levels = orig_order)) %>%
+        dplyr::mutate(geom_text_label = "") %>%
+        oneway_plot(label_prefix = "Predicted - ", colors = colors)
+    }
+
+  } else if(type == "2") {
+    for(i in seq_along(intersect_predictors)) {
+
+      predictor <- intersect_predictors[[i]]
+      predictor_sym <- rlang::sym(predictor)
+
+      base_df <- model_list$current_model$factor_tables[[i]] %>%
+        dplyr::select(!!predictor_sym := orig_level, weight_sum = weight)
+
+      orig_order <- base_df[[predictor]]
+
+      for(model_nm in names(model_list)) {
+
+        model_nm_sym <- rlang::sym(paste0(model_nm, "_pred_base_lvl"))
+
+        join_df <- model_list[[model_nm]]$factor_tables[[i]] %>%
+          dplyr::select(!!predictor_sym := orig_level, !!model_nm_sym := model_avg_lin_nonrescaled)
+
+        base_df <- base_df %>%
+          left_join(join_df, by = c(predictor))
+      }
+
+      colors <- setNames(
+        c(my_colors()[seq_len(length(model_list) - 1)], "#99FF00"),
+        c(paste0(names(model_list), "_pred_base_lvl"))
+      )
+
+      plot_list[[predictor]] <- base_df %>%
+        dplyr::mutate(!!predictor_sym := factor(!!predictor_sym, levels = orig_order)) %>%
+        dplyr::mutate(geom_text_label = "") %>%
+        oneway_plot(label_prefix = "Linear - ", colors = colors)
+    }
+
+  }
+
+  plot_list
 
 }

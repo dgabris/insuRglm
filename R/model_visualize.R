@@ -1,7 +1,9 @@
-model_visualize <- function(setup, y_axis = c("predicted", "linear"), rescaled = FALSE) {
+model_visualize <- function(setup, factors = c("fitted", "unfitted", "all"),
+                            y_axis = c("predicted", "linear"), rescaled = FALSE) {
 
   stopifnot(inherits(setup, "setup"))
   stopifnot(inherits(setup, "modeling"))
+  factors <- match.arg(factors)
   y_axis <- match.arg(y_axis)
 
   model <- setup$current_model
@@ -26,7 +28,7 @@ model_visualize <- function(setup, y_axis = c("predicted", "linear"), rescaled =
     label_prefix <- "Linear - "
   }
 
-  model$factor_tables %>%
+  plot_list <- model$factor_tables %>%
     lapply(function(x) {
       var_symbol <- rlang::sym(x$factor[[1]])
       orig_order <- x$orig_level
@@ -56,4 +58,17 @@ model_visualize <- function(setup, y_axis = c("predicted", "linear"), rescaled =
       }
 
     })
+
+  fitted_num <- length(relativities)
+
+  if(factors == "fitted") {
+    plot_list[1:fitted_num]
+
+  } else if(factors == "unfitted") {
+    plot_list[-c(1:fitted_num)]
+
+  } else {
+    plot_list
+  }
+
 }
