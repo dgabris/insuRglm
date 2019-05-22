@@ -26,13 +26,13 @@ model_fit <- function(setup) {
 
   if(any(offset_class)) {
     offset_names <- names(offset_class)[offset_class]
-    offset_index <- which(predictors == offset_names)
+    offset_index <- match(offset_names, predictors)
     predictors_with_space[offset_index] <- paste0("offset(", predictors_with_space[offset_index], ")")
   }
 
   if(any(variate_class)) {
     variate_names <- names(variate_class)[variate_class]
-    variate_index <- which(predictors == variate_names)
+    variate_index <- match(variate_names, predictors)
     predictors_with_space[variate_index] <- paste0(
       "poly(", predictors_with_space[variate_index], ", degree = ", variate_degrees, ")"
     )
