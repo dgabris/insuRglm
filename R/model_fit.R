@@ -1,6 +1,10 @@
 model_fit <- function(setup) {
   stopifnot(inherits(setup, "setup"))
 
+  if(inherits(setup, "offset_model")) {
+    message("Note: Using test data and fitting intercept only.")
+  }
+
   target <- setup$target
   weight <- setup$weight
   predictors <- setup$current_model$predictors
@@ -17,7 +21,10 @@ model_fit <- function(setup) {
   variate_class <- vapply(train, function(x) inherits(x, "variate"), logical(1))
   variate_degrees <- vapply(train[variate_class], function(x) attr(x, "degree"), numeric(1))
 
-  df_list <- remap_predictors(list(train = train, test = test), predictors)
+  df_list <- list(train = train)
+  df_list$test <- test
+
+  df_list <- remap_predictors(df_list, predictors)
 
   train <- df_list$train
   test <- if(test_exists) df_list$test else NULL
@@ -45,7 +52,7 @@ model_fit <- function(setup) {
 
   tw <- c(target, weight)
   colnames(train) <- c(tw, paste0(setdiff(colnames(train), tw), " "))
-  colnames(test) <- c(tw, paste0(setdiff(colnames(test), tw), " "))
+  if(test_exists) colnames(test) <- c(tw, paste0(setdiff(colnames(test), tw), " "))
 
   glm <- glm(
     formula = formula,

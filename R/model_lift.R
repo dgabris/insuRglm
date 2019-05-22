@@ -14,6 +14,11 @@ model_lift <- function(setup, method = c("train", "crossval", "test"), cv_strati
     model <- "current_model"
   }
 
+  if(inherits(setup, "offset_model")) {
+    method <- "train"
+    model <- "current_model"
+  }
+
   model_list <- list()
 
   for(model_nm in setdiff(model, "current_model")) {
