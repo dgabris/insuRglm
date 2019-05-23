@@ -19,14 +19,16 @@ crossval_predict <- function(data_train, model, cv_folds, stratified) {
   stopifnot((n_losses + n_non_losses) == nrow(data_train))
 
   if(stratified && (n_non_losses >= cv_folds)) {
-    train <- train %>%
-      dplyr::mutate(cv_fold =
-        if_else(
-          !!target_sym > 0,
-          sample(1:cv_folds, n_losses, replace = TRUE),
-          sample(1:cv_folds, n_non_losses, replace = TRUE)
-        )
-      )
+
+    losses_index <- train[[target]] > 0
+    non_losses_index <- !losses_index
+
+    cv_fold_losses <- sample(1:cv_folds, n_losses, replace = TRUE)
+    cv_fold_non_losses <- sample(1:cv_folds, n_non_losses, replace = TRUE)
+
+    train <- train %>% dplyr::mutate(cv_fold = 0)
+    train$cv_fold[losses_index] <- cv_fold_losses
+    train$cv_fold[non_losses_index] <- cv_fold_non_losses
 
   } else {
     train <- train %>%
