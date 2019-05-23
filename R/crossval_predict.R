@@ -23,8 +23,8 @@ crossval_predict <- function(data_train, model, cv_folds, stratified) {
       dplyr::mutate(cv_fold =
         if_else(
           !!target_sym > 0,
-          sample(1:cv_folds, nrow(n_losses), replace = TRUE),
-          sample(1:cv_folds, nrow(n_non_losses), replace = TRUE)
+          sample(1:cv_folds, n_losses, replace = TRUE),
+          sample(1:cv_folds, n_non_losses, replace = TRUE)
         )
       )
 
