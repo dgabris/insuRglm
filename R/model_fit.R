@@ -62,6 +62,7 @@ model_fit <- function(setup) {
   )
 
   betas <- betas(predictors, broom::tidy(glm))
+  beta_triangles <- beta_triangles(betas, glm)
   model_stats <- broom::glance(glm)
   train_predictions <- predict(glm, newdata = train, type = "response")
   test_predictions <- if(test_exists) predict(glm, newdata = test, type = "response") else NULL
@@ -75,6 +76,7 @@ model_fit <- function(setup) {
       family = family,
       predictors = predictors,
       betas = betas,
+      beta_triangles = beta_triangles,
       model_stats = model_stats,
       factor_tables = factor_tables,
       relativities = relativities,
