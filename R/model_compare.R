@@ -20,7 +20,7 @@ model_compare <- function(setup, with, type = c("1", "2", "3")) {
     lapply(function(x) x$predictors) %>%
     purrr::reduce(base::intersect)
 
-  plot_list <- list()
+  result_list <- list()
   if(type == "1") {
     for(i in seq_along(intersect_predictors)) {
 
@@ -48,7 +48,7 @@ model_compare <- function(setup, with, type = c("1", "2", "3")) {
         c("obs_avg", paste0(names(model_list), "_fitted_avg"))
       )
 
-      plot_list[[predictor]] <- base_df %>%
+      result_list[[predictor]] <- base_df %>%
         dplyr::mutate(!!predictor_sym := factor(!!predictor_sym, levels = orig_order)) %>%
         dplyr::mutate(geom_text_label = "") %>%
         oneway_plot(label_prefix = "Predicted - ", colors = colors)
@@ -81,14 +81,16 @@ model_compare <- function(setup, with, type = c("1", "2", "3")) {
         c(paste0(names(model_list), "_pred_base_lvl"))
       )
 
-      plot_list[[predictor]] <- base_df %>%
+      result_list[[predictor]] <- base_df %>%
         dplyr::mutate(!!predictor_sym := factor(!!predictor_sym, levels = orig_order)) %>%
         dplyr::mutate(geom_text_label = "") %>%
         oneway_plot(label_prefix = "Linear - ", colors = colors)
     }
 
+  } else if(type == "3") {
+    result_list <- nested_model_test(model_list)
   }
 
-  plot_list
+  result_list
 
 }

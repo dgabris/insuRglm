@@ -63,7 +63,7 @@ model_fit <- function(setup) {
 
   betas <- betas(predictors, broom::tidy(glm))
   beta_triangles <- beta_triangles(betas, glm)
-  model_stats <- broom::glance(glm)
+  model_stats <- dplyr::bind_cols(broom::glance(glm), dispersion = summary(glm)$dispersion)
   train_predictions <- predict(glm, newdata = train, type = "response")
   test_predictions <- if(test_exists) predict(glm, newdata = test, type = "response") else NULL
   factor_tables <- factor_tables(setup, betas, train_predictions)
