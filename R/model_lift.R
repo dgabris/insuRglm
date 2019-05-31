@@ -1,36 +1,46 @@
-model_lift <- function(setup, method = c("train", "crossval", "test"), cv_stratified = FALSE,
-                       cv_folds = 10, model = "current_model", buckets = 10) {
+model_lift <- function(setup, data = c("train", "crossval"), model = c("current", "all"), buckets = 10) {
 
   stopifnot(inherits(setup, "setup"))
+  stopifnot(inherits(setup, "modeling"))
+  data <- match.arg(data)
+  model <- match.arg(model)
   stopifnot(is.numeric(buckets) || is.integer(buckets))
-  method <- match.arg(method)
-  stopifnot(is.numeric(cv_folds) || is.integer(cv_folds))
-  if(method == "test") stopifnot(!is.null(setup$data_test))
-  stopifnot(is.character(model))
-  stopifnot(all(setdiff(model, "current_model") %in% names(setup$ref_models)))
-
-  if(method == "test" && model != "current_model") {
-    message("Showing only current model when using test set.")
-    model <- "current_model"
-  }
 
   if(inherits(setup, "offset_model")) {
-    method <- "train"
-    model <- "current_model"
+    data <- "train"
+    model <- "current"
+    message("Offset model has train (formerly test) data only.")
   }
+
+  if(data == "crossval" && is.null(setup$current_model$cv_predictions)) {
+    message("No CV predictions found. Please run 'model_crossval()' first.")
+    return(setup)
+  }
+
+  train <- setup$data_train
+  actual <- train[[setup$target]]
+  weight_vector <- if(is.null(setup$weight)) rep(1, nrow(train)) else train[[setup$weight]]
 
   model_list <- list()
 
-  for(model_nm in setdiff(model, "current_model")) {
-    model_list[[model_nm]] <- setup$ref_models[[model_nm]]
+  if(model == "all") {
+    for(model_nm in names(setup$ref_models)) {
+      model_list[[model_nm]] <- setup$ref_models[[model_nm]]
+    }
   }
 
-  if("current_model" %in% model) model_list$current_model <- setup$current_model
+  model_list$current_model <- setup$current_model
 
-  lift_buckets_list <- lift_buckets(setup, model_list, buckets, method, cv_folds, cv_stratified)
+  lapply(names(model_list), function(model_nm) {
+    if(data == "train") {
+      expected <- model_list[[model_nm]]$train_predictions
+    } else {
+      expected <- model_list[[model_nm]]$cv_predictions
+    }
 
-  lapply(seq_along(lift_buckets_list), function(i) {
-    lift_plot(lift_buckets_list[[i]], names(lift_buckets_list)[[i]])
+    lift_buckets(actual, expected, weight_vector, buckets) %>%
+      tidyr::gather(key = type, value = target, actual, expected) %>%
+      lift_plot(title = paste0(model_nm, " (", data, ")"))
   })
 
 }

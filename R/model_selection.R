@@ -1,10 +1,26 @@
-model_selection <- function(setup, method = c("train", "crossval"),
-                            cv_folds = 10, cv_stratified = FALSE, buckets = 10) {
+model_selection <- function(setup, data = c("train", "crossval"), metric = c("rmse"), buckets = NULL) {
 
   stopifnot(inherits(setup, "setup"))
-  method <- match.arg(method)
-  stopifnot(is.numeric(cv_folds) || is.integer(cv_folds))
-  stopifnot(is.numeric(cv_folds) || is.integer(cv_folds))
+  stopifnot(inherits(setup, "modeling"))
+  data <- match.arg(data)
+  metric <- match.arg(metric)
+  if(!is.null(buckets)) stopifnot(is.integer(buckets) || is.numeric(buckets))
+
+  if(inherits(setup, "offset_model")) {
+    message("It doesn't make sense to do model selection at this point.")
+    return(setup)
+  }
+
+  if(data == "crossval" && is.null(setup$current_model$cv_predictions)) {
+    message("No CV predictions found. Please run 'model_crossval()' first.")
+    return(setup)
+  }
+
+  metric_sym <- rlang::sym(metric)
+  train <- setup$data_train
+
+  actual <- train[[setup$target]]
+  weight_vector <- if(is.null(setup$weight)) rep(1, nrow(train)) else train[[setup$weight]]
 
   model_list <- list()
   for(ref_model_nm in names(setup$ref_models)) {
@@ -13,59 +29,65 @@ model_selection <- function(setup, method = c("train", "crossval"),
 
   model_list$current_model <- setup$current_model
 
-  lift_buckets_list_train <- lift_buckets(setup, model_list, buckets, method = "train", cv_folds, cv_stratified)
-  lift_buckets_list_cv <- if(method == "crossval") {
-    lift_buckets(setup, model_list, buckets, method = "crossval", cv_folds, cv_stratified)
-  } else {
-    NULL
-  }
+  metric_df <- tibble::tibble()
 
-  model_names <- names(model_list)
-  rmse_train_vector <- vector("numeric", length(model_names))
-  rmse_cv_vector <- if(method == "crossval") vector("numeric", length(model_names)) else NULL
+  for(model_nm in names(model_list)) {
+    model <- model_list[[model_nm]]
+    expected_train <- model$train_predictions
+    expected_cv <- model$cv_predictions
 
-  for(i in seq_along(model_names)) {
+    if(!is.null(buckets)) {
+      train_df <- lift_buckets(actual, expected_train, weight_vector, buckets) %>%
+        dplyr::select(-bucket)
 
-    rmse_train <- lift_buckets_list_train[[i]] %>%
-      tidyr::spread(key = type, value = target) %>%
-      dplyr::mutate(squared_residual = (actual - expected)^2) %>%
-      dplyr::summarize(rmse = sqrt(sum(squared_residual) / n())) %>%
-      unlist(use.names = FALSE)
-
-    if(method == "crossval") {
-      rmse_cv <- lift_buckets_list_cv[[i]] %>%
-        tidyr::spread(key = type, value = target) %>%
-        dplyr::mutate(squared_residual = (actual - expected)^2) %>%
-        dplyr::summarize(rmse = sqrt(sum(squared_residual) / n())) %>%
-        unlist(use.names = FALSE)
     } else {
-      rmse_cv <- NULL
+      train_df <- tibble::tibble(actual = actual, expected = expected_train, weight = weight_vector)
     }
 
-    rmse_train_vector[[i]] <- rmse_train
-    rmse_cv_vector[[i]] <- rmse_cv
+    if(data == "crossval") {
+      if(!is.null(buckets)) {
+        cv_df <- lift_buckets(actual, expected_cv, weight_vector, buckets) %>%
+          dplyr::select(-bucket)
+
+      } else {
+        cv_df <- tibble::tibble(actual = actual, expected = expected_cv, weight = weight_vector)
+      }
+
+    } else {
+      cv_df <- tibble::tibble(actual = numeric(0), expected = numeric(0), weight = numeric(0))
+    }
+
+    train_metric <- selection_metric(train_df, metric)
+    cv_metric <- if(data == "crossval") selection_metric(cv_df, metric) else NULL
+
+    temp_df <- dplyr::bind_rows(
+      tibble::tibble(model = model_nm, data = "train", !!metric_sym := train_metric),
+      if(data == "crossval") tibble::tibble(model = model_nm, data = "crossval", !!metric_sym := cv_metric) else NULL
+    )
+
+    metric_df <- dplyr::bind_rows(metric_df, temp_df)
   }
 
-  train_tibble <- tibble::tibble(model = model_names, method = "train", rmse = rmse_train_vector)
-  if(method == "crossval") {
-    cv_tibble <- tibble::tibble(model = model_names, method = "crossval", rmse = rmse_cv_vector)
-  } else {
-    cv_tibble <- tibble::tibble()
-  }
-
-  dplyr::bind_rows(
-    train_tibble,
-    cv_tibble
-  ) %>%
-  dplyr::mutate(model = factor(model, levels = model_names)) %>%
-  ggplot2::ggplot(ggplot2::aes(x = model, y = rmse, group = method)) +
-    ggplot2::geom_line(ggplot2::aes(color = method)) +
-    ggplot2::geom_point(ggplot2::aes(color = method)) +
-    ggplot2::labs(x = "Model", y = "RMSE", color = "Method") +
-    ggplot2::ggtitle(paste0("Model Selection - ", buckets, " buckets")) +
+  g <- metric_df %>%
+    dplyr::mutate(model = factor(model, levels = names(model_list))) %>%
+    ggplot2::ggplot(ggplot2::aes(x = model, y = !!metric_sym, group = data)) +
+    ggplot2::geom_line(ggplot2::aes(color = data)) +
+    ggplot2::geom_point(ggplot2::aes(color = data)) +
+    ggplot2::labs(x = "Model", y = metric, color = "Data") +
     ggplot2::theme(
       plot.title = ggplot2::element_text(hjust = 0.45),
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
     )
+
+  if(!is.null(buckets)) {
+    g +
+      ggplot2::ggtitle(
+        label = "Model Selection",
+        subtitle = paste0(buckets, " buckets created prior the '", metric, "' calculation")
+      )
+  } else {
+    g +
+      ggplot2::ggtitle("Model Selection")
+  }
 
 }

@@ -3,10 +3,11 @@ basic_summary <- function(setup) {
   train <- setup$data_train
   test <- setup$data_test
   target <- setup$target
-  weight <- setup$weight
 
   n_train <- nrow(train)
-  w_avg_train <- round(sum(train[[target]] * train[[weight]]) / sum(train[[weight]]), 2)
+  train_weight <- if(is.null(setup$weight)) rep(1, nrow(train)) else train[[setup$weight]]
+
+  w_avg_train <- round(sum(train[[target]] * train_weight) / sum(train_weight), 2)
   max_train <- round(max(train[[target]]), 2)
   min_train <- round(min(train[[target]]), 2)
 
@@ -19,7 +20,9 @@ basic_summary <- function(setup) {
 
   if(!is.null(test)) {
     n_test <- nrow(test)
-    w_avg_test <- round(sum(test[[target]] * test[[weight]]) / sum(test[[weight]]), 2)
+    test_weight <- if(is.null(setup$weight)) rep(1, nrow(test)) else test[[setup$weight]]
+
+    w_avg_test <- round(sum(test[[target]] * test_weight) / sum(test_weight), 2)
     max_test <- round(max(test[[target]]), 2)
     min_test <- round(min(test[[target]]), 2)
 

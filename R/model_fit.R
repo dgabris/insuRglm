@@ -81,7 +81,8 @@ model_fit <- function(setup) {
       factor_tables = factor_tables,
       relativities = relativities,
       train_predictions = train_predictions,
-      test_predictions = test_predictions
+      test_predictions = test_predictions,
+      cv_predictions = NULL
     ),
     class = "fitted_model"
   )

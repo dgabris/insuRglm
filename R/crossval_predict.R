@@ -44,10 +44,12 @@ crossval_predict <- function(data_train, model, cv_folds, stratified) {
     fold_test <- train %>%
       dplyr::filter(cv_fold == fold)
 
+    weight_vector <- if(is.null(weight)) rep(1, nrow(fold_train)) else fold_train[[weight]]
+
     glm <- glm(
       formula = formula,
       family = family,
-      weights = fold_train[[weight]],
+      weights = weight_vector,
       data = fold_train
     )
 
