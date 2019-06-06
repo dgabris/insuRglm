@@ -25,7 +25,7 @@ beta_triangles <- function(betas, glm) {
       row_index <- match(predictor_labels, vcov_estimate_rows)
       col_index <- match(predictor_labels, vcov_estimate_cols)
 
-      predictor_vcov_matrix <- vcov_estimate_matrix[row_index, col_index]
+      predictor_vcov_matrix <- vcov_estimate_matrix[row_index, col_index, drop = FALSE]
 
       combinations_df <- tidyr::crossing(
         a = factor(predictor_labels, levels = predictor_labels),
