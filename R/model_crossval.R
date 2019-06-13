@@ -21,7 +21,7 @@ model_crossval <- function(setup, cv_folds = 10, stratified = FALSE) {
     cv_fold_losses <- sample(1:cv_folds, n_losses, replace = TRUE)
     cv_fold_non_losses <- sample(1:cv_folds, n_non_losses, replace = TRUE)
 
-    data_train <- train %>% dplyr::mutate(cv_fold = 0)
+    data_train <- data_train %>% dplyr::mutate(cv_fold = 0)
     data_train$cv_fold[losses_index] <- cv_fold_losses
     data_train$cv_fold[non_losses_index] <- cv_fold_non_losses
 
