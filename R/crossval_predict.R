@@ -1,4 +1,4 @@
-crossval_predict <- function(data_train, model, cv_folds, stratified) {
+crossval_predict <- function(data_train, model, cv_folds) {
   stopifnot(inherits(data_train, "data.frame"))
   stopifnot(inherits(model, "fitted_model"))
   stopifnot(is.numeric(cv_folds) || is.integer(cv_folds))
@@ -11,31 +11,11 @@ crossval_predict <- function(data_train, model, cv_folds, stratified) {
   family <- model$family
   weight <- model$weight
 
-  train <- remap_predictors(list(train = data_train), predictors)$train %>%
-    mutate(id = row_number())
+  train <- remap_predictors(list(train = data_train), predictors)$train
 
-  n_losses <- nrow(dplyr::filter(data_train, !!target_sym > 0))
-  n_non_losses <- nrow(dplyr::filter(data_train, !!target_sym == 0))
-  stopifnot((n_losses + n_non_losses) == nrow(data_train))
+  nrows <- nrow(train)
+  cv_predictions_list <- vector("list", cv_folds)
 
-  if(stratified && (n_non_losses >= cv_folds)) {
-
-    losses_index <- train[[target]] > 0
-    non_losses_index <- !losses_index
-
-    cv_fold_losses <- sample(1:cv_folds, n_losses, replace = TRUE)
-    cv_fold_non_losses <- sample(1:cv_folds, n_non_losses, replace = TRUE)
-
-    train <- train %>% dplyr::mutate(cv_fold = 0)
-    train$cv_fold[losses_index] <- cv_fold_losses
-    train$cv_fold[non_losses_index] <- cv_fold_non_losses
-
-  } else {
-    train <- train %>%
-      dplyr::mutate(cv_fold = sample(1:cv_folds, nrow(.), replace = TRUE))
-  }
-
-  cv_predictions <- tibble::tibble()
   for(fold in seq_len(cv_folds)) {
 
     fold_train <- train %>%
@@ -53,16 +33,16 @@ crossval_predict <- function(data_train, model, cv_folds, stratified) {
       data = fold_train
     )
 
-    fold_predictions <- dplyr::bind_cols(
+    cv_predictions_list[[fold]] <- tibble::tibble(
       id = fold_test$id,
       cv_pred_target = predict(glm, newdata = fold_test, type = "response")
     )
 
-    cv_predictions <- dplyr::bind_rows(cv_predictions, fold_predictions)
   }
 
-  cv_predictions %>%
+  dplyr::bind_rows(!!!cv_predictions_list) %>%
     dplyr::arrange(id) %>%
     dplyr::select(cv_pred_target) %>%
     unlist(use.names = FALSE)
+
 }
