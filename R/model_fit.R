@@ -68,6 +68,7 @@ model_fit <- function(setup) {
   test_predictions <- if(test_exists) predict(glm, newdata = test, type = "response") else NULL
   factor_tables <- factor_tables(setup, betas, train_predictions)
   relativities <- relativities(factor_tables)
+  leverage_plots <- leverage_plots(glm)
 
   setup$current_model <- structure(
     list(
@@ -82,7 +83,8 @@ model_fit <- function(setup) {
       relativities = relativities,
       train_predictions = train_predictions,
       test_predictions = test_predictions,
-      cv_predictions = NULL
+      cv_predictions = NULL,
+      leverage_plots = leverage_plots
     ),
     class = "fitted_model"
   )
