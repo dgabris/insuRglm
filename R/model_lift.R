@@ -1,4 +1,4 @@
-model_lift <- function(setup, data = c("train", "crossval"), model = c("current", "all"), buckets = 10) {
+model_lift <- function(setup, data = c("train", "crossval"), model = c("current", "all"), buckets = 10, weighted = TRUE) {
 
   stopifnot(inherits(setup, "setup"))
   stopifnot(inherits(setup, "modeling"))
@@ -38,7 +38,7 @@ model_lift <- function(setup, data = c("train", "crossval"), model = c("current"
       expected <- model_list[[model_nm]]$cv_predictions
     }
 
-    lift_buckets(actual, expected, weight_vector, buckets) %>%
+    lift_buckets(actual, expected, weight_vector, buckets, weighted) %>%
       tidyr::gather(key = type, value = target, actual, expected) %>%
       lift_plot(title = paste0(model_nm, " (", data, ")"))
   })
