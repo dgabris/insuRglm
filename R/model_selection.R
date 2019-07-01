@@ -1,4 +1,5 @@
-model_selection <- function(setup, data = c("train", "crossval"), metric = c("rmse"), buckets = NULL) {
+model_selection <- function(setup, data = c("train", "crossval"), metric = c("rmse"), buckets = NULL,
+                            weighted = TRUE) {
 
   stopifnot(inherits(setup, "setup"))
   stopifnot(inherits(setup, "modeling"))
@@ -37,7 +38,7 @@ model_selection <- function(setup, data = c("train", "crossval"), metric = c("rm
     expected_cv <- model$cv_predictions
 
     if(!is.null(buckets)) {
-      train_df <- lift_buckets(actual, expected_train, weight_vector, buckets) %>%
+      train_df <- lift_buckets(actual, expected_train, weight_vector, buckets, weighted) %>%
         dplyr::select(-bucket)
 
     } else {
@@ -46,7 +47,7 @@ model_selection <- function(setup, data = c("train", "crossval"), metric = c("rm
 
     if(data == "crossval") {
       if(!is.null(buckets)) {
-        cv_df <- lift_buckets(actual, expected_cv, weight_vector, buckets) %>%
+        cv_df <- lift_buckets(actual, expected_cv, weight_vector, buckets, weighted) %>%
           dplyr::select(-bucket)
 
       } else {
