@@ -19,7 +19,7 @@ model_offset <- function(setup) {
     predictor <- predictors[[i]]
     predictor_sym <- rlang::sym(predictor)
 
-    relativities <- current_model$relativities[[i]]
+    relativities <- current_model$relativities[[i + 1]]
     mapping <- setNames(relativities$relativity, relativities$orig_level)
 
     setup <- setup %>%

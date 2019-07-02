@@ -9,7 +9,7 @@ model_compare <- function(setup, with, type = c("1", "2", "3")) {
   current_predictors <- current_model$predictors
   current_relativities <- current_model$relativities
 
-  if(length(current_predictors) != length(current_relativities)) {
+  if(length(current_predictors) != length(current_relativities) - 1) {
     message("Comparison won't reflect recent changes! Please run 'model_fit()' first.")
   }
 

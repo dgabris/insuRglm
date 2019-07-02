@@ -14,11 +14,12 @@ model_export <- function(setup, xlsx_file, overwrite = FALSE) {
   predictor_names <- setup$current_model$predictors
 
   base_df <- setup$current_model$betas %>%
-    filter(factor == "(Intercept)") %>%
-    select(base = estimate)
+    dplyr::filter(factor == "(Intercept)") %>%
+    dplyr::mutate(base_value = exp(estimate)) %>%
+    dplyr::select(base_value)
 
   relativities <- setup$current_model$relativities
-  charts <- model_visualize(setup)[seq_len(length(relativities))]
+  charts <- model_visualize(setup)[seq_len(length(relativities) - 1)]
 
   wb <- openxlsx::createWorkbook()
   openxlsx::addWorksheet(wb, sheetName = main_sheet_name)
@@ -29,7 +30,7 @@ model_export <- function(setup, xlsx_file, overwrite = FALSE) {
     predictor_name <- stringr::str_replace_all(predictor_names[[i]], "\\*", "-")
     openxlsx::addWorksheet(wb, sheetName = predictor_name)
 
-    relativity_df <- tibble::as_data_frame(relativities[[i]])
+    relativity_df <- tibble::as_data_frame(relativities[[i + 1]])
     nrows_table <- nrow(relativity_df)
     ncols_table <- ncol(relativity_df)
 

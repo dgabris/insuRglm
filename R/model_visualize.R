@@ -10,7 +10,7 @@ model_visualize <- function(setup, factors = c("fitted", "unfitted", "all"),
   predictors <- model$predictors
   relativities <- model$relativities
 
-  if(length(predictors) != length(relativities)) {
+  if(length(predictors) != length(relativities) - 1) {
     message("Visualization won't reflect recent changes! Please run 'model_fit()' first.")
   }
 
@@ -59,7 +59,7 @@ model_visualize <- function(setup, factors = c("fitted", "unfitted", "all"),
 
     })
 
-  fitted_num <- length(relativities)
+  fitted_num <- length(relativities) - 1
 
   if(factors == "fitted") {
     plot_list[1:fitted_num]
