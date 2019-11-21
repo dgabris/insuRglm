@@ -1,31 +1,163 @@
-setup <- function(data_train, data_test = NULL, target, weight = NULL,
-                  family = c("poisson", "gamma", "tweedie"), tweedie_p = NULL,
-                  simple_factors = NULL, seed = NULL) {
+#' Setup your modeling workflow
+#'
+#' Creates a setup object that is the basis for any insuRglm modeling workflow.
+#' This object is subsequently used as a main input in most functions in the package.
+#'
+#' @note Short summary of the train/test datasets is written to the console
+#'
+#' @param data_train Dataframe. Training data
+#' @param data_test Dataframe. Test data
+#' @param target Character scalar. Name of the target variable
+#' @param weight Character scalar. Name of the weight variable
+#' @param offset. Character scalar. Name of the offset variable, applicable for \code{poisson} family
+#' @param family Character scalar. Name of distribution family. One of \code{poisson}, \code{tweedie} or \code{gamma}
+#' @param tweedie_p Numeric scalar. Tweedie variance power, if family \code{tweedie} is used
+#' @param simple_factors Character vector. Names of potential predictors. These predictors need to be \code{factor} class.
+#' @param keep_cols Character vector. Names of columns that are not potential predictors, but should be kept in data.
+#' @param seed Numeric scalar. Seed for random number generation. Currently doesn't have any effect.
+#'
+#' @return List of class \code{setup}. Contains attributes and objects used by other functions in the package.
+#' @export
+#' @importFrom magrittr "%>%"
+#'
+#' @examples
+#' data('sev_train')
+#' data('sev_test')
+#'
+#' head(train)
+#'
+#' # minimal
+#' setup <- setup(
+#'   data_train = train,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#' # adding test set, specifying potential predictors manually
+#' setup <- setup(
+#'   data_train = train,
+#'   data_test = test,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   simple_factors = c('agecat', 'veh_age', 'veh_body'),
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#'
+setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = NULL, family = c("poisson", "gamma", "tweedie"),
+                  tweedie_p = NULL, simple_factors = NULL, keep_cols = NULL, seed = NULL) {
 
-  stopifnot(inherits(data_train, "data.frame"))
-  stopifnot(target %in% colnames(data_train))
+  dfs <- list(data_train, data_test) %>%
+    purrr::keep(function(x) !is.null(x))
 
-  if(is.null(simple_factors)) {
-    simple_factors <- setdiff(names(data_train), c(target, weight))
-  } else {
-    simple_factors <- unique(simple_factors)
+  if(!(any(vapply(dfs, function(x) inherits(x, 'data.frame'), logical(1))))) {
+    if(!is.null(data_test)) {
+      stop("'data_train' and 'data_test' must be of class 'data.frame'")
+    } else {
+      stop("'data_train' must be of class 'data.frame'")
+    }
   }
-
-  stopifnot(all(simple_factors %in% colnames(data_train)))
-  stopifnot(all(vapply(data_train[simple_factors], class, character(1)) == "factor"))
 
   if(!is.null(data_test)) {
-    stopifnot(inherits(data_test, "data.frame"))
-    stopifnot(target %in% colnames(data_test))
-    stopifnot(all(simple_factors %in% colnames(data_test)))
-    stopifnot(all(vapply(data_test[simple_factors], class, character(1)) == "factor"))
+    schema_train <- vapply(data_train, class, character(1))
+    schema_test <- vapply(data_test, class, character(1))
+
+    schema_test <- schema_test[match(names(schema_train), names(schema_test))]
+
+    if(any(schema_train != schema_test)) {
+      stop(
+        paste0(
+          "'data_train' and 'data_test' don't have the same columns or their types. ",
+          "Please check this using 'colnames' and 'class' functions."
+          )
+        )
+    }
   }
 
+  if(!inherits(target, 'character')) stop("'target' must be a character scalar")
+  if(!target %in% colnames(data_train)) stop('Target variable not in the dataset')
+
+  if(!is.null(weight)) {
+    if(!inherits(weight, 'character')) stop("'weight' must be a character scalar")
+    if(!weight %in% colnames(data_train)) stop('Weight variable not in the dataset')
+  } else {
+    weight <- '_weight'
+    lapply(dfs, function(x) x[weight] <- 1)
+    warning("'weight' was not provided, each record will have the same weight")
+  }
+
+  if(!is.null(offset)) {
+    if(!inherits(offset, 'character')) stop("'offset' must be a character scalar")
+    if(!offset %in% colnames(data_train)) stop('Offset variable not in the dataset')
+  }
+
+  if(!is.null(keep_cols)) {
+    if(!inherits(keep_cols, 'character')) stop("'keep_cols' must be a character vector")
+    if(!all(keep_cols %in% colnames(data_train))) stop("Some of the 'keep_cols' are not in the dataset")
+  }
+
+  if(is.null(simple_factors)) {
+    simple_factors <- setdiff(colnames(data_train), c(target, weight, offset, keep_cols))
+  } else {
+    if(!inherits(simple_factors, 'character')) {
+      stop("'simple_factors' must be a character vector of names of potential predictor columns in the dataset")
+    } else {
+      simple_factors <- unique(simple_factors)
+    }
+  }
+
+  if(!all(simple_factors %in% colnames(data_train))) {
+    stop("Some of the 'simple_factors' are not in the dataset")
+  }
+
+  if(any(vapply(data_train[simple_factors], class, character(1)) != 'factor')) {
+    levels_length <- vapply(data_train[simple_factors], function(x) length(unique(x)), integer(1))
+
+    if(any(levels_length > 255)) {
+      stop(
+        paste0(
+          "Tried coercing the predictors to 'factor' class, but some of them have more than 255 unique values: ",
+          paste0(simple_factors[levels_length > 255], collapse = ', '),
+          ". If these are not predictors, but columns you want to keep, please include them in 'keep_cols' argument"
+        )
+      )
+    } else {
+      data_train[simple_factors] <- lapply(data_train[simple_factors], function(x) {
+        if(!inherits(x, 'factor')) as.factor(x) else x
+      })
+
+      if(!is.null(data_test)) {
+        data_test[simple_factors] <- lapply(data_test[simple_factors], function(x) {
+          if(!inherits(x, 'factor')) as.factor(x) else x
+        })
+      }
+
+      warning("All the predictors are now coerced to 'factor' class")
+    }
+  }
+
+  stopifnot(all(vapply(data_train[simple_factors], class, character(1)) == "factor"))
+
   family <- match.arg(family)
-  if(family %in% c("poisson", "gamma")) stopifnot(is.null(tweedie_p))
-  if(family %in% c("tweedie")) stopifnot(!is.null(tweedie_p) && tweedie_p >= 1 && tweedie_p <= 2)
+
+  if(family %in% c('poisson') && is.null(offset)) {
+    warning("No 'offset' provided for family 'poisson', will treat 'weight' as 'offset'")
+    offset <- weight
+  }
+
+  if(family %in% c('poisson', 'gamma') && !is.null(tweedie_p)) {
+    warning("family is 'poisson' or 'gamma', 'tweedie_p' will be ignored")
+  }
+
+  if(family %in% c('tweedie') && (is.null(tweedie_p) || (tweedie_p <= 1 || tweedie_p >= 2))) {
+    stop("'tweedie_p' must be provided and its value in range (1, 2), boundaries excluded.")
+  }
 
   tweedie_p <- if(is.null(tweedie_p)) 0 else tweedie_p
+
   family <- switch(
     family,
     poisson = poisson(link = "log"),
@@ -52,6 +184,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL,
     list(
       target = target,
       weight = weight,
+      offset = offset,
       family = family,
       predictors = NULL
     ),
@@ -62,6 +195,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL,
     list(
       target = target,
       weight = weight,
+      offset = offset,
       family = family,
       simple_factors = simple_factors,
       seed = seed,
