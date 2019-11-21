@@ -34,8 +34,13 @@ split_and_save <- function(df, name, train_frac = 0.8) {
   train_rows <- sample(1:nrow(df), size = train_size)
   test_rows <- setdiff(1:nrow(df), train_rows)
 
-  df[train_rows, ] %>% save(file = file.path('data', paste0(name, '_train.rda')))
-  df[test_rows, ] %>% save(file = file.path('data', paste0(name, '_test.rda')))
+  train <- df[train_rows, ]
+  rownames(train) <- NULL
+  save(train, file = file.path('data', paste0(name, '_train.rda')))
+
+  test <- df[test_rows, ]
+  rownames(test) <- NULL
+  save(test, file = file.path('data', paste0(name, '_test.rda')))
 }
 
 # create target variables
@@ -70,7 +75,7 @@ select_cols <- c(
 
 target_cols <- list(
   freq = c('numclaims', 'freq'), # TODO - make the poisson GLM work with offset
-  sev = c('sev'),
+  sev = c('numclaims', 'sev'),
   bc = c('bc'),
   lr = c('lr'),
   is_clm = c('is_clm')
