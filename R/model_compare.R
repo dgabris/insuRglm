@@ -50,10 +50,11 @@
 #'
 
 model_compare <- function(setup, with, type = c("1", "2", "3")) {
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
+  if(!inherits(setup, 'modeling')) stop("No model is fitted. Please run 'model_fit' first")
+  if(!(is.character(with) && length(with) == 1)) stop("'with' must be a character scalar")
+  if(!with %in% names(setup$ref_models)) stop('Invalid model name provided')
 
-  stopifnot(inherits(setup, "setup"))
-  stopifnot(inherits(setup, "modeling"))
-  stopifnot(with %in% names(setup$ref_models))
   type <- match.arg(type)
 
   current_model <- setup$current_model

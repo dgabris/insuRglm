@@ -43,10 +43,11 @@
 model_visualize <- function(setup, factors = c("fitted", "unfitted", "all"),
                             y_axis = c("predicted", "linear"), rescaled = FALSE) {
 
-  stopifnot(inherits(setup, "setup"))
-  stopifnot(inherits(setup, "modeling"))
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
+  if(!inherits(setup, 'modeling')) stop("No model is fitted. Please run 'model_fit' first")
   factors <- match.arg(factors)
   y_axis <- match.arg(y_axis)
+  if(!(is.logical(rescaled) && length(rescaled) == 1)) stop("'rescaled' must be a logical scalar")
 
   model <- setup$current_model
   predictors <- model$predictors

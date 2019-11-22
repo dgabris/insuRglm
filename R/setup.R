@@ -79,7 +79,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     }
   }
 
-  if(!inherits(target, 'character')) stop("'target' must be a character scalar")
+  if(!(inherits(target, 'character') && length(target) == 1)) stop("'target' must be a character scalar")
   if(!target %in% colnames(data_train)) stop('Target variable not in the dataset')
 
   if(!is.null(weight)) {
@@ -92,7 +92,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
   }
 
   if(!is.null(offset)) {
-    if(!inherits(offset, 'character')) stop("'offset' must be a character scalar")
+    if(!(inherits(offset, 'character') && length(offset) == 1)) stop("'offset' must be a character scalar")
     if(!offset %in% colnames(data_train)) stop('Offset variable not in the dataset')
   }
 
@@ -154,8 +154,10 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     message("family is 'poisson' or 'gamma', 'tweedie_p' will be ignored")
   }
 
-  if(family %in% c('tweedie') && (is.null(tweedie_p) || (tweedie_p <= 1 || tweedie_p >= 2))) {
-    stop("'tweedie_p' must be provided and its value in range (1, 2), boundaries excluded.")
+  if(family %in% c('tweedie')) {
+    if(is.null(tweedie_p)) stop("Please provide 'tweedie_p'")
+    if(!(is.numeric(tweedie_p) && length(tweedie_p) == 1)) stop("'tweedie_p' must be a numeric scalar")
+    if(tweedie_p <= 1 || tweedie_p >= 2) stop("'tweedie_p' must be provided and its value in range (1, 2), boundaries excluded.")
   }
 
   tweedie_p <- if(is.null(tweedie_p)) 0 else tweedie_p

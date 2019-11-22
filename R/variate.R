@@ -36,11 +36,21 @@
 #'
 
 variate <- function(x, type = c("prop", "non_prop"), prop_log = TRUE,  mapping = NULL, degree = 1) {
+  if(!inherits(x, 'simple_factor')) stop('Please use the predictor from the dataset')
 
-  stopifnot(inherits(x, "simple_factor"))
+  if(inherits(x, 'custom_factor') || inherits(x, 'variate') || inherits(x, 'offset')) {
+    x <- as_simple_factor(x)
+  }
+
+  if(!is.null(mapping)) {
+    if(!is.numeric(mapping)) stop("'mapping' must be a numeric vector")
+    if(!length(attr(x, 'orig_levels')) == length(mapping)) stop("'mapping' must be of same length as number of levels")
+  }
+
   type <- match.arg(type)
-  if(!is.null(mapping)) stopifnot(is.numeric(mapping) || is.integer(mapping))
-  if(!is.null(mapping)) stopifnot(length(attr(x, "orig_levels")) == length(mapping))
+
+  if(!(is.logical(prop_log) && length(prop_log) == 1)) stop("'prop_log' must be a logical scalar")
+  if(!(is.numeric(degree) && length(degree) == 1)) stop("'degree' must be a numeric scalar")
 
   orig_levels <- attr(x, "orig_levels")
   num_levels <- length(orig_levels)

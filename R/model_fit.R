@@ -34,7 +34,7 @@
 #'
 
 model_fit <- function(setup) {
-  stopifnot(inherits(setup, "setup"))
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
 
   if(inherits(setup, "offset_model")) {
     message("Note: Using test data and fitting intercept only.")

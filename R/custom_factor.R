@@ -33,9 +33,14 @@
 #'
 
 custom_factor <- function(x, mapping) {
-  stopifnot(inherits(x, "simple_factor"))
-  stopifnot(is.numeric(mapping) || is.integer(mapping))
-  stopifnot(length(attr(x, "orig_levels")) == length(mapping))
+  if(!inherits(x, 'simple_factor')) stop('Please use the predictor from the dataset')
+
+  if(inherits(x, 'custom_factor') || inherits(x, 'variate') || inherits(x, 'offset')) {
+    x <- as_simple_factor(x)
+  }
+
+  if(!is.numeric(mapping)) stop("'mapping' must be a numeric vector")
+  if(!length(attr(x, 'orig_levels')) == length(mapping)) stop("'mapping' must be of same length as number of levels")
 
   if(is.null(names(mapping))) {
     names(mapping) <- attr(x, "orig_levels")

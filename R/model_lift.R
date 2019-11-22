@@ -43,12 +43,12 @@
 #'
 
 model_lift <- function(setup, data = c("train", "crossval"), model = c("current", "all"), buckets = 10, weighted = TRUE) {
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
+  if(!inherits(setup, 'modeling')) stop("No model is fitted. Please run 'model_fit' first")
+  if(!(is.numeric(buckets) && length(buckets) == 1)) stop("'buckets' must be a numeric scalar")
 
-  stopifnot(inherits(setup, "setup"))
-  stopifnot(inherits(setup, "modeling"))
   data <- match.arg(data)
   model <- match.arg(model)
-  stopifnot(is.numeric(buckets) || is.integer(buckets))
 
   if(inherits(setup, "offset_model")) {
     data <- "train"

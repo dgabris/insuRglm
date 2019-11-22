@@ -36,9 +36,10 @@
 #'
 
 model_crossval <- function(setup, cv_folds = 10, stratified = FALSE) {
-  stopifnot(inherits(setup, "setup"))
-  stopifnot(inherits(setup, "modeling"))
-  stopifnot(is.numeric(cv_folds) || is.integer(cv_folds))
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
+  if(!inherits(setup, 'modeling')) stop("No model is fitted. Please run 'model_fit' first")
+  if(!(is.numeric(cv_folds) && length(cv_folds) == 1)) stop("'cv_folds' must be a numeric scalar")
+  if(!(is.logical(stratified) && length(stratified) == 1)) stop("'stratified' must be a logical scalar")
 
   data_train <- setup$data_train %>%
     mutate(id = row_number())

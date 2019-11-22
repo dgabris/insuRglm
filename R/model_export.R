@@ -32,9 +32,9 @@
 #'
 
 model_export <- function(setup, xlsx_file, overwrite = FALSE) {
-
-  stopifnot(inherits(setup, "setup"))
-  stopifnot(is.character(xlsx_file))
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
+  if(!inherits(setup, 'modeling')) stop("No model is fitted. Please run 'model_fit' first")
+  if(!(is.character(xlsx_file) && length(xlsx_file) == 1)) stop("'xlsx_file' must be a character scalar")
 
   main_sheet_name <- "All"
   image_width_cm <- 20

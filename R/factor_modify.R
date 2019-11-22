@@ -33,7 +33,14 @@
 #'
 
 factor_modify <- function(setup, ...) {
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
+
   dots <- rlang::enexprs(...)
+  vars <- names(dots)
+
+  if(any(vars == '')) stop('Please provide a named expression')
+
+  if(!all(vars %in% setup$simple_factors)) stop('Please use the original predictor name as the name of argument')
 
   setup$data_train <- setup$data_train %>%
     dplyr::mutate(!!!dots)

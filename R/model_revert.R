@@ -33,9 +33,10 @@
 #'
 
 model_revert <- function(setup, to) {
-  stopifnot(inherits(setup, "setup"))
-  stopifnot(inherits(setup, "modeling"))
-  stopifnot(to %in% names(setup$ref_models))
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
+  if(!inherits(setup, 'modeling')) stop("No model is fitted. Please run 'model_fit' first")
+  if(!(is.character(to) && length(to) == 1)) stop("'to' must be a character scalar")
+  if(!to %in% names(setup$ref_models)) stop('Invalid model name provided')
 
   setup$current_model <- setup$ref_models[[to]]
 

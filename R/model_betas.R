@@ -31,8 +31,8 @@
 #'
 
 model_betas <- function(setup, triangles = FALSE) {
-  stopifnot(inherits(setup, "setup"))
-  stopifnot(inherits(setup, "modeling"))
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
+  if(!inherits(setup, 'modeling')) stop("No model is fitted. Please run 'model_fit' first")
 
   if(triangles) {
     setup$current_model$beta_triangles
