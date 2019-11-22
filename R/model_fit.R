@@ -1,3 +1,38 @@
+#' Fit the insuRglm model
+#'
+#' Fits the model with the current model formula. Computes and saves back many new attributes and objects.
+#' This is a required step before using \code{model_visualize}, \code{model_compare}, \code{model_save},
+#' \code{model_betas}, \code{model_crossval}, \code{model_lift}, \code{model_export} and others
+#'
+#' @param setup Setup object. Created at the start of the workflow. Usually piped in from previous step.
+#'
+#' @return Setup object with updated attributes.
+#' @export
+#'
+#' @examples
+#' require(dplyr) # for the pipe operator
+#' data('sev_train')
+#'
+#' setup <- setup(
+#'   data_train = train,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#' modeling <- setup %>%
+#'   factor_add(pol_yr) %>%
+#'   factor_add(agecat) %>%
+#'   model_fit()
+#'
+#' modeling %>%
+#'   model_visualize(factors = 'fitted')
+#'
+#' modeling %>%
+#'   model_visualize(factors = 'unfitted')
+#'
+
 model_fit <- function(setup) {
   stopifnot(inherits(setup, "setup"))
 

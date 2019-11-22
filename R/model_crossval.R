@@ -1,3 +1,40 @@
+#' Train all insuRglm models on CV data
+#'
+#' Train the current (last) and any saved insuRglm model using CV data. Predictions are stored for later use.
+#'
+#' @param setup Setup object. Created at the start of the workflow. Usually piped in from previous step.
+#' @param cv_folds Integer scalar. Number of rancom CV folds to be used.
+#' @param stratified Boolean scalar. Whether to stratify losses and non-losses.
+#'
+#' @return Setup object with updated attributes.
+#' @export
+#'
+#' @seealso \code{\link{model_save}}, \code{\link{model_lift}}
+#'
+#' @examples
+#' require(dplyr) # for the pipe operator
+#' data('sev_train')
+#'
+#' setup <- setup(
+#'   data_train = train,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#' modeling <- setup %>%
+#'   factor_add(pol_yr) %>%
+#'   factor_add(agecat) %>%
+#'   model_fit()
+#'
+#' modeling_cv <- modeling %>%
+#'   model_crossval()
+#'
+#' modeling_cv %>%
+#'   model_lift(data = 'crossval')
+#'
+
 model_crossval <- function(setup, cv_folds = 10, stratified = FALSE) {
   stopifnot(inherits(setup, "setup"))
   stopifnot(inherits(setup, "modeling"))

@@ -1,3 +1,40 @@
+#' Simplify to variate
+#'
+#' Simplifies simple factor to variate, which usually means that monotonic trend is enforced and some of the levels may be merged together.
+#' Must be used within \code{factor_modify} function. This is usually done with originally continuous variables.
+#'
+#' @param x Unquoted symbol. Predictor to be simplified. Must be present in the modeling dataset.
+#' @param type Character scalar. One of \code{prop} or \code{non_prop}, specifying proportional and unproportional variate.
+#' @param prop_log Boolean scalar. Whether the proportional variate should be logged (recommended).
+#' @param mapping Integer vector. Mapping to use for simplification. Length must be equal to length of unique levels of the predictor.
+#' @param degree Integer scalar. Polynomial degree to use.
+#'
+#' @return Original vector with updated attributes.
+#' @export
+#'
+#' @seealso \code{\link{factor_modify}}
+#'
+#' @examples
+#' require(dplyr) # for the pipe operator
+#' data('sev_train')
+#'
+#' setup <- setup(
+#'   data_train = train,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#' modeling <- setup %>%
+#'   factor_add(pol_yr) %>%
+#'   factor_add(agecat) %>%
+#'   model_fit() %>%
+#'   model_save('model1') %>%
+#'   factor_modify(agecat = variate(agecat, type = 'non_prop', mapping = c(1, 2, 3, 4, 5, 6))) %>%
+#'   model_fit()
+#'
+
 variate <- function(x, type = c("prop", "non_prop"), prop_log = TRUE,  mapping = NULL, degree = 1) {
 
   stopifnot(inherits(x, "simple_factor"))

@@ -1,5 +1,38 @@
+#' Add predictor to the current model formula
+#'
+#' Adds the predictor to the list of predictors. These will be used in model formula when \code{model_fit} is called.
+#'
+#' @param setup Setup object. Created at the start of the workflow. Usually piped in from previous step.
+#' @param var_symbol Unquoted symbol. Predictor to be added. Must be present in the modeling dataset.
+#'
+#' @return Setup object with updated attributes.
+#' @export
+#'
+#' @examples
+#' require(dplyr) # for the pipe operator
+#' data('sev_train')
+#'
+#' setup <- setup(
+#'   data_train = train,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#' print(setup)
+#'
+#' # not fitted yet
+#' modeling <- setup %>%
+#'   factor_add(pol_yr) %>%
+#'   factor_add(agecat)
+#'
+#' print(modeling)
+#'
+#'
+
 factor_add <- function(setup, var_symbol) {
-  stopifnot(inherits(setup, "setup"))
+  if(!inherits(setup, 'setup')) stop('Setup object is not correct')
 
   new_var_expr <- rlang::enexpr(var_symbol)
   new_var_char <- as.character(new_var_expr)
@@ -25,7 +58,7 @@ factor_add <- function(setup, var_symbol) {
     new_var_char <- as.character(new_var_sym)
 
   } else {
-    stopifnot(new_var_char %in% setup$simple_factors)
+    if(!new_var_char %in% setup$simple_factors) stop('This predictor is not present in the dataset provided to setup object.')
   }
 
   predictors <- setup$current_model$predictors

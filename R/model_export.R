@@ -1,3 +1,36 @@
+#' Export the current insuRglm model
+#'
+#' Exports the current model into xlsx file. The excel spreadsheet will contain the charts, as well as
+#' relativities and weights for each predictor included in the current (last) model.
+#'
+#' @param setup Setup object. Created at the start of the workflow. Usually piped in from previous step.
+#' @param xlsx_file Character scalar. Path and name of the file to store the exported model.
+#' @param overwrite Boolean scalar. Whether to overwrite an existing file.
+#'
+#' @return NULL, this function has only side effects.
+#' @export
+#'
+#' @examples
+#' require(dplyr) # for the pipe operator
+#' data('sev_train')
+#'
+#' setup <- setup(
+#'   data_train = train,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#' modeling <- setup %>%
+#'   factor_add(pol_yr) %>%
+#'   factor_add(agecat) %>%
+#'   model_fit()
+#'
+#' modeling %>%
+#'   model_export('export_test.xlsx')
+#'
+
 model_export <- function(setup, xlsx_file, overwrite = FALSE) {
 
   stopifnot(inherits(setup, "setup"))

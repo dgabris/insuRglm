@@ -21,6 +21,7 @@
 #' @importFrom magrittr "%>%"
 #'
 #' @examples
+#' require(dplyr) # for the pipe operator
 #' data('sev_train')
 #' data('sev_test')
 #'
@@ -47,6 +48,7 @@
 #' )
 #'
 #'
+
 setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = NULL, family = c("poisson", "gamma", "tweedie"),
                   tweedie_p = NULL, simple_factors = NULL, keep_cols = NULL, seed = NULL) {
 
@@ -86,7 +88,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
   } else {
     weight <- '_weight'
     lapply(dfs, function(x) x[weight] <- 1)
-    warning("'weight' was not provided, each record will have the same weight")
+    message("'weight' was not provided, each record will have the same weight")
   }
 
   if(!is.null(offset)) {
@@ -135,7 +137,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
         })
       }
 
-      warning("All the predictors are now coerced to 'factor' class")
+      message("All the predictors are now coerced to 'factor' class")
     }
   }
 
@@ -144,12 +146,12 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
   family <- match.arg(family)
 
   if(family %in% c('poisson') && is.null(offset)) {
-    warning("No 'offset' provided for family 'poisson', will treat 'weight' as 'offset'")
+    message("No 'offset' provided for family 'poisson', will treat 'weight' as 'offset'")
     offset <- weight
   }
 
   if(family %in% c('poisson', 'gamma') && !is.null(tweedie_p)) {
-    warning("family is 'poisson' or 'gamma', 'tweedie_p' will be ignored")
+    message("family is 'poisson' or 'gamma', 'tweedie_p' will be ignored")
   }
 
   if(family %in% c('tweedie') && (is.null(tweedie_p) || (tweedie_p <= 1 || tweedie_p >= 2))) {

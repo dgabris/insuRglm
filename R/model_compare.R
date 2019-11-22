@@ -1,3 +1,54 @@
+#' Compare two or more insuRglm models
+#'
+#' Compares multiple insuRglm models with the current (last) model. The comparison models must be saved using \code{model_save}.
+#'
+#' @param setup Setup object. Created at the start of the workflow. Usually piped in from previous step.
+#' @param with Character vector. Names of models that should be compared against the current model.
+#' @param type Character scalar. One of '1', '2' or '3'.
+#' '1' will produce visual comparison of observed values versus fitted values of each comparison model.
+#' '2' will produce visual comparison of predictions at base levels of each comparison model.
+#' '3' will produce nested model test in form of matrix of standard error percentages.
+#'
+#' @return Either list of ggplot2 charts (types '1', '2') or matrix-like dataframe of nested model test results (type '3').
+#' @export
+#'
+#' @seealso \code{\link{model_save}}
+#'
+#' @examples
+#' require(dplyr) # for the pipe operator
+#' data('sev_train')
+#'
+#' setup <- setup(
+#'   data_train = train,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#' modeling <- setup %>%
+#'   factor_add(pol_yr) %>%
+#'   model_fit() %>%
+#'   model_save('model1') %>%
+#'   factor_add(agecat) %>%
+#'   model_fit() %>%
+#'   model_save('model2') %>%
+#'   factor_modify(agecat = variate(agecat, type = 'non_prop', mapping = c(1, 2, 3, 4, 5, 6))) %>%
+#'   model_fit()
+#'
+#' # compare observed versus fitted
+#' modeling %>%
+#'   model_compare(with = 'model2', type = '1')
+#'
+#' # compare predictions at base levels
+#' modeling %>%
+#'   model_compare(with = 'model2', type = '2')
+#'
+#' # nested model test of model with and without the agecat
+#' modeling %>%
+#'   model_compare(with = 'model1', type = '3')
+#'
+
 model_compare <- function(setup, with, type = c("1", "2", "3")) {
 
   stopifnot(inherits(setup, "setup"))

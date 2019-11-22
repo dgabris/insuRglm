@@ -49,6 +49,7 @@ This object is subsequently used as a main input in most functions in the packag
 Short summary of the train/test datasets is written to the console
 }
 \examples{
+require(dplyr) # for the pipe operator
 data('sev_train')
 data('sev_test')
 

@@ -1,3 +1,45 @@
+#' Visualize the insuRglm model
+#'
+#' Visualizes the current (last) GLM model using charts which may contain observed values, fitted values and values derived
+#' from model coefficients (predictions at base levels). Scale of the y-axis can be controlled using \code{y_axis} and \code{rescaled} arguments.
+#'
+#' @param setup Setup object. Created at the start of the workflow. Usually piped in from previous step.
+#' @param factors Character scalar. One of \code{fitted}, \code{unfitted} or \code{all}.
+#' @param y_axis Character scalar. Either \code{predicted} or \code{linear}.
+#' @param rescaled Boolean scalar. Whether the y-axis is rescaled compared to the base level predictor at each chart.
+#'
+#' @return List of ggplot2 charts.
+#' @export
+#'
+#' @examples
+#' require(dplyr) # for the pipe operator
+#' data('sev_train')
+#'
+#' setup <- setup(
+#'   data_train = train,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#' modeling <- setup %>%
+#'   factor_add(pol_yr) %>%
+#'   factor_add(agecat) %>%
+#'   model_fit()
+#'
+#' # this is also the default
+#' modeling %>%
+#'   model_visualize(factors = 'fitted', y_axis = 'predicted', rescaled = FALSE)
+#'
+#' modeling %>%
+#'   model_visualize(factors = 'fitted', y_axis = 'linear', rescaled = TRUE)
+#'
+#' modeling %>%
+#'   model_visualize(factors = 'unfitted')
+#'
+#'
+
 model_visualize <- function(setup, factors = c("fitted", "unfitted", "all"),
                             y_axis = c("predicted", "linear"), rescaled = FALSE) {
 
