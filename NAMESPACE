@@ -2,6 +2,9 @@
 
 export(as_simple_factor)
 export(custom_factor)
+export(explore_corr)
+export(explore_data)
+export(explore_target)
 export(factor_add)
 export(factor_modify)
 export(factor_remove)

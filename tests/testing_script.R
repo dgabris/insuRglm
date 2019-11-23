@@ -16,27 +16,21 @@ setup <- setup(
   keep_cols = c('pol_nbr', 'exposure', 'premium')
 )
 
-# TODO - rename
-# explore_target instead of target_dist
-# explore_data instead of data_analyzer
-# explore_corr instead of corr_matrix
+# EXPLORATORY ANALYSIS
 
-target_dist(setup)
-target_dist(setup, weighted = TRUE)
-target_dist(setup, without_zero = TRUE)
-target_dist(setup, upper_limit = 5000)
-target_dist(setup, lower_limit = 5000)
-target_dist(setup, lower_limit = 5000, upper_limit = 6000)
+explore_target(setup)
+explore_target(setup, type = 'tabular')
+explore_target(setup, type = 'visual')
+explore_target(setup, type = 'tabular', exclude_zero = TRUE)
+explore_target(setup, type = 'visual', lower_quantile = 0.05, upper_quantile = 0.95)
 
-data_analyzer(setup, type = "table")
-data_analyzer(setup, type = "graph")
-data_analyzer(setup, type = "table", second_dim = "pol_yr")
-data_analyzer(setup, type = "graph", second_dim = "pol_yr")
+explore_data(setup, type = "tabular")
+explore_data(setup, type = "visual")
+explore_data(setup, type = "tabular", by = "pol_yr")
+explore_data(setup, type = "visual", by = "pol_yr")
 
-corr_matrix(setup, type = "graph")
-corr_matrix(setup, type = "table")
-
-var_importance(setup, direction = "backward")
+explore_corr(setup, type = "visual")
+explore_corr(setup, type = "tabular")
 
 # MODELING
 # TODO - fix error in polynomial variate (argument 'degree')
@@ -131,7 +125,3 @@ modeling_cv %>%
 # EXPORT
 modeling %>%
   model_export('..\\insuRglm_export\\sev_model.xlsx', overwrite = TRUE)
-
-
-
-
