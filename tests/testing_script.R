@@ -130,7 +130,7 @@ modeling_cv %>%
 
 # EXPORT
 modeling %>%
-  model_export('..\\insuRglm_export\\sev_model.xlsx')
+  model_export('..\\insuRglm_export\\sev_model.xlsx', overwrite = TRUE)
 
 
 
