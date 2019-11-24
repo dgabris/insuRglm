@@ -9,7 +9,7 @@
 #' @return Setup object with updated attributes.
 #' @export
 #'
-#' @seealso \code{\link{model_save}}, \code{\link{model_lift}}
+#' @seealso \code{\link{model_save}}, \code{\link{model_lift}}, \code{\link{model_performance}}
 #'
 #' @examples
 #' require(dplyr) # for the pipe operator

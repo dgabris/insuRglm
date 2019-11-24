@@ -35,6 +35,7 @@ explore_corr(setup, type = "tabular")
 # MODELING
 # TODO - fix error in polynomial variate (argument 'degree')
 # e.g. setup %>% factor_add(pol_yr) %>% factor_add(agecat) %>% factor_modify(agecat = variate(agecat, type = 'non_prop', mapping = 1:6, degree = 2)) %>% model_fit()
+# TODO2 - add possibility to create intercept model
 
 modeling <- setup %>%
   factor_add(pol_yr) %>%
@@ -95,6 +96,7 @@ modeling %>%
 
 # TODO - verify if model_lift takes into account 'factor_modify' actions or not
 # because lift charts for models before/after simplifications look totally identical
+# need to create a more universal fit function that can be used inside normal fitting or inside crossval
 
 modeling %>%
   model_lift(buckets = 10)
@@ -113,6 +115,13 @@ modeling_cv %>%
 
 modeling_cv %>%
   model_lift(data = 'crossval', model = 'all', buckets = 10)
+
+modeling_cv %>%
+  model_performance(data = 'crossval', buckets = 10)
+
+modeling_cv %>%
+  model_performance(data = 'crossval', buckets = 5)
+
 
 # WHAT TO DO WITH TEST SET?
 # e.g. score, evaluate, offset?

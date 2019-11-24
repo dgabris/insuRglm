@@ -44,5 +44,5 @@ modeling_cv \%>\%
 
 }
 \seealso{
-\code{\link{model_save}}, \code{\link{model_lift}}
+\code{\link{model_save}}, \code{\link{model_lift}}, \code{\link{model_performance}}
 }

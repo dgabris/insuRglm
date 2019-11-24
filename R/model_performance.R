@@ -1,4 +1,55 @@
-model_selection <- function(setup, data = c("train", "crossval"), metric = c("rmse"), buckets = NULL,
+#' Compare the performance of multiple insuRglm models
+#'
+#' Compares the performance of multiple models present within one setup object. Each value on the plot represents a summarized
+#' performance metric for the corresponding model. Optionally, data can be grouped (as in lift chart) before the metric is computed.
+#' When this is done, the information that plot displays, is actually a comparison of multiple lift charts.
+#'
+#' @param setup Setup object. Created at the start of the workflow. Usually piped in from previous step.
+#' @param data Character scalar. Either \code{train} or \code{crossval}. The latter will use predictions generated
+#' and stored after running \code{model_crossval}.
+#' @param metric Character scalar. Performance metric, so far it is only \code{rmse}.
+#' @param buckets Numeric scalar. Number of groups to divide data into, before computing the performance metric.
+#' @param weighted Boolean scalar. Whether the average of target variable in each group should be weighted.
+#'
+#' @return Ggplot2 chart depicting the performance of predictions of all models based on train and optionally cross-validation data.
+#' @export
+#'
+#' @seealso \code{\link{model_crossval}}, \code{\link{model_lift}}
+#'
+#' @examples
+#' require(dplyr) # for the pipe operator
+#' data('sev_train')
+#'
+#' setup <- setup(
+#'   data_train = train,
+#'   target = 'sev',
+#'   weight = 'numclaims',
+#'   family = 'gamma',
+#'   keep_cols = c('pol_nbr', 'exposure', 'premium')
+#' )
+#'
+#' modeling <- setup %>%
+#'   factor_add(pol_yr) %>%
+#'   factor_add(agecat) %>%
+#'   model_fit() %>%
+#'   model_save('model1') %>%
+#'   factor_add(veh_value) %>%
+#'   model_fit() %>%
+#'   model_save('model2') %>%
+#'   factor_add(veh_age) %>%
+#'   model_fit()
+#'
+#' modeling_cv <- modeling %>%
+#'   model_crossval()
+#'
+#' modeling_cv %>%
+#'   model_lift(data = 'crossval', buckets = 5, model = 'all')
+#'
+#' modeling_cv %>%
+#'   model_performance(data = 'crossval', buckets = 5)
+#'
+
+model_performance <- function(setup, data = c("train", "crossval"), metric = c("rmse"), buckets = NULL,
                             weighted = TRUE) {
 
   stopifnot(inherits(setup, "setup"))
