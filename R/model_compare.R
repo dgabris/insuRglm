@@ -92,7 +92,7 @@ model_compare <- function(setup, with, type = c("1", "2", "3")) {
           dplyr::select(!!predictor_sym := orig_level, !!model_nm_sym := fitted_avg_pred_nonrescaled)
 
         base_df <- base_df %>%
-          left_join(join_df, by = c(predictor))
+          dplyr::left_join(join_df, by = c(predictor))
       }
 
       colors <- setNames(
@@ -125,7 +125,7 @@ model_compare <- function(setup, with, type = c("1", "2", "3")) {
           dplyr::select(!!predictor_sym := orig_level, !!model_nm_sym := model_avg_lin_nonrescaled)
 
         base_df <- base_df %>%
-          left_join(join_df, by = c(predictor))
+          dplyr::left_join(join_df, by = c(predictor))
       }
 
       colors <- setNames(

@@ -6,7 +6,7 @@ selection_metric <- function(df, metric = c("rmse")) {
   if(metric == "rmse") {
     df %>%
       dplyr::mutate(squared_residual = (actual - expected)^2) %>%
-      dplyr::summarize(rmse = sqrt(sum(squared_residual) / n())) %>%
+      dplyr::summarize(rmse = sqrt(sum(squared_residual) / dplyr::n())) %>%
       unlist(use.names = FALSE)
   }
 

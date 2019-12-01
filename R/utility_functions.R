@@ -18,12 +18,3 @@ prop_mapping <- function(orig_levels, prop_log) {
   names(center) <- orig_levels
   center
 }
-
-print.setup <- function(x, ...) {
-  print(paste0("Target: ", x$target))
-  print(paste0("Weight: ", x$weight))
-  print(paste0("Actual Predictors: ", paste0(x$current_model$predictors, collapse = ", ")))
-  print(paste0("Available Factors: ",
-        paste0(setdiff(x$simple_factors, x$current_model$predictors), collapse = ", "))
-  )
-}

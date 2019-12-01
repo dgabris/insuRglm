@@ -23,7 +23,7 @@ oneway_plot <- function(df, colors = NULL, label_prefix = NULL) {
   # keeping relativity percentage labels only on model predictions at base levels
   if("pred_base_levels" %in% names(df)) {
     target_df <- target_df %>%
-      mutate(geom_text_label = if_else(type != "pred_base_levels", "", geom_text_label))
+      dplyr::mutate(geom_text_label = dplyr::if_else(type != "pred_base_levels", "", geom_text_label))
   }
 
   g <- combined_df %>%

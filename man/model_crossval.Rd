@@ -11,7 +11,8 @@ model_crossval(setup, cv_folds = 10, stratified = FALSE)
 
 \item{cv_folds}{Integer scalar. Number of rancom CV folds to be used.}
 
-\item{stratified}{Boolean scalar. Whether to stratify losses and non-losses.}
+\item{stratified}{Boolean scalar. Whether to stratify losses and non-losses.
+This will help in creating more representative crossvalidation folds with datasets that contain very few non-zero losses.}
 }
 \value{
 Setup object with updated attributes.

@@ -90,7 +90,7 @@ explore_target <- function(setup, type = c('visual', 'tabular'), weighted = TRUE
 
   if(exclude_zero) {
     combined_df <- combined_df %>%
-      dplyr::filter(!near(target, 0))
+      dplyr::filter(!dplyr::near(target, 0))
   }
 
   if(lower_quantile != 0) {
@@ -120,9 +120,9 @@ explore_target <- function(setup, type = c('visual', 'tabular'), weighted = TRUE
   }
 
   combined_df <- combined_df %>%
-    group_by(train_test) %>%
-    mutate(weight = weight / sum(weight)) %>%
-    ungroup()
+    dplyr::group_by(train_test) %>%
+    dplyr::mutate(weight = weight / sum(weight)) %>%
+    dplyr::ungroup()
 
   g <- ggplot2::ggplot(data = combined_df, ggplot2::aes(x = train_test, y = target)) +
     ggplot2::geom_violin(ggplot2::aes(weight = weight, fill = train_test))

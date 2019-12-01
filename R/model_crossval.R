@@ -5,6 +5,7 @@
 #' @param setup Setup object. Created at the start of the workflow. Usually piped in from previous step.
 #' @param cv_folds Integer scalar. Number of rancom CV folds to be used.
 #' @param stratified Boolean scalar. Whether to stratify losses and non-losses.
+#' This will help in creating more representative crossvalidation folds with datasets that contain very few non-zero losses.
 #'
 #' @return Setup object with updated attributes.
 #' @export
@@ -42,7 +43,7 @@ model_crossval <- function(setup, cv_folds = 10, stratified = FALSE) {
   if(!(is.logical(stratified) && length(stratified) == 1)) stop("'stratified' must be a logical scalar")
 
   data_train <- setup$data_train %>%
-    mutate(id = row_number())
+    dplyr::mutate(id = dplyr::row_number())
 
   target <- setup$target
   target_sym <- rlang::sym(target)

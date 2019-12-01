@@ -28,7 +28,7 @@
 #'   model_fit()
 #'
 #' modeling %>%
-#'   model_export('export_test.xlsx')
+#'   model_export('export_test.xlsx', overwrite = TRUE)
 #'
 
 model_export <- function(setup, xlsx_file, overwrite = FALSE) {

@@ -38,6 +38,6 @@ modeling <- setup \%>\%
   model_fit()
 
 modeling \%>\%
-  model_export('export_test.xlsx')
+  model_export('export_test.xlsx', overwrite = TRUE)
 
 }
