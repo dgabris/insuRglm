@@ -24,3 +24,7 @@ Imports:
   openxlsx (>= 4.1.0),
   Hmisc (>= 4.3)
 RoxygenNote: 7.0.1
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

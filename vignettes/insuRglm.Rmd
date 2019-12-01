@@ -1,0 +1,315 @@
+---
+title: "insuRglm"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{insuRglm}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7
+)
+
+library(insuRglm)
+library(magrittr)
+```
+
+Generalized linear model (GLM) is a flexible generalization of ordinary linear regression that allows for response variables that have error distribution models other than a normal distribution. The underlying model is still linear, but it is related to the response variable via a link function.
+
+This type of model is implemented in many software packages, including R base `glm` function. However, in insurance setting, the methodology for building GLM models is sometimes different from the usual use. While there's certainly an opportunity for automation to narrow down the predictor space, the core predictors are usually selected very carefully with almost manual approach. It is considered important to inspect every predictor from multiple angles and make sure it has both statistical and business significance.
+
+This approach is usually carried out through the use of specialized commercial software products, which offer graphical user interface and limit the possibility of any automation or customization. **The insuRglm package aims to provide an opensource and transparent alternative, which can be integrated into existing R workflows, thus allowing bigger degree of automation and customization.**
+
+## Data: claim severity
+To illustrate the use of this package, we will use modified subset of insurance data available at http://www.acst.mq.edu.au/GLMsforInsuranceData. Our response (or target) variable will be claim severity, while the list of potential predictors includes vehicle value, vehicle age, vehicle body, area and driver's age category. Let's inspect the dataset first.
+
+```{r}
+data('sev_train')
+head(train)
+```
+
+## Setup your workflow
+First step of using the package should always be the one-time `setup` function.
+
+```{r}
+setup <- setup(
+  data_train = train,
+  target = 'sev',
+  weight = 'numclaims',
+  family = 'gamma',
+  keep_cols = c('pol_nbr', 'exposure', 'premium')
+)
+```
+
+Note that if you don't specify the `simple_factors` argument, all the dataset columns other than `target`, `weight` and `keep_cols` will be considered `simple_factors`. These should have less than 255 unique values and will be converted to `factor` class. For working with other target distributions, please see the documentation of `setup` function.
+
+## Explore the target
+Basic information about the target variable is already printed to the console by the `setup` function. If we wish to explore little bit further, it is possible by using `explore_target` function.
+
+```{r}
+explore_target(setup)
+```
+
+Some target distributions may contain a lot of zeros or low values, therefore it might be desirable to exclude them from the analysis, or limit the visualized data to specific quantile range. This is done through arguments `exlude_zero`, `lower_quantile` or `upper_quantile`.
+
+```{r}
+explore_target(setup, lower_quantile = 0.05, upper_quantile = 0.95)
+```
+
+In case we want to see the same information in textual form, we can do it with `type = 'tabular'`.
+
+```{r}
+explore_target(setup, type = 'tabular', lower_quantile = 0.05, upper_quantile = 0.95)
+```
+
+## Explore the data
+We can also explore the potential predictors in either visual or tabular form. The results will show the weighted average of target variable across the levels of the corresponding predictor.
+
+Let's look at the visual form for the single predictor.
+
+```{r, results = FALSE}
+explore_data(setup, factors = 'agecat')
+```
+
+Alternatively, let's inspect three predictors in tabular form. Leaving the `factors` argument blank will create these results for all available potential predictors.
+
+```{r}
+explore_data(setup, type = 'tabular', factors = c('pol_yr', 'agecat', 'veh_body'))
+```
+
+We can also get a two-way view by using the `by` argument. 
+
+```{r, results = FALSE}
+explore_data(setup, factors = 'agecat', by = 'pol_yr')
+```
+
+```{r}
+explore_data(setup, type = 'tabular', factors = c('agecat', 'veh_body'), by = 'pol_yr')
+```
+
+## Use the pipe
+The `setup` function produces an object with class setup. Such object is usually the first argument of functions in this package. Moreover, most of them also return this object, with modified attributes and sub-objects. This makes the functions fully compatible with `%>%` operator, as we can see in the following example.
+
+```{r}
+setup %>% explore_target(type = 'tabular', n_cuts = 5)
+```
+This becomes even more useful when we start with the modeling workflow. These functions will be explained shortly.
+```{r}
+setup %>% 
+  factor_add(pol_yr) %>% 
+  factor_add(agecat) %>% 
+  model_fit()
+```
+
+## Modify the model formula
+Model formula defines the structure of the GLM model. The target is fixed after the creation of setup object, however, we can add predictors using `factor_add`.
+
+```{r}
+setup %>% 
+  factor_add(pol_yr) %>% 
+  factor_add(agecat)
+```
+
+If we ever decide to remove the predictor from the current model formula, we can do so, without having to modify the preceding code.
+
+```{r}
+setup %>% 
+  factor_add(pol_yr) %>% 
+  factor_add(agecat) %>% 
+  model_fit() %>% 
+  factor_remove(agecat)
+```
+
+## Fit and visualize
+We can modify the model formula at any stage of the workflow, however, the model has to be fit (or re-fit) for this change to take effect.
+
+```{r}
+modeling <- setup %>% 
+  factor_add(pol_yr) %>% 
+  factor_add(agecat) %>% 
+  model_fit()
+```
+
+We can visualize model predictors from the last fitted model by using `model_visualize`.
+
+```{r, results = FALSE}
+modeling %>% 
+  model_visualize(factors = 'fitted')
+```
+
+We can also inspect the unfitted variables.
+
+```{r, results = FALSE}
+modeling %>% 
+  model_visualize(factors = 'unfitted')
+```
+
+## Simplify the predictors
+Since the package currently supports only categorical predictors, every category of each predictor is fitted as a separate dummy variable. We can use `factor_modify` to decrease the model complexity by creating `custom_factor` or `variate`.
+
+Custom factor will still remain categorical, but some of the levels will be merged together, based on the mapping that user provides. This mapping has to be of the same length as number of unique levels of the corresponding predictor. Assigning the same number to two different levels will merge them together. This is usually done with categorical variables where order of levels doesn't matter.
+
+In this example, areas 'A' and 'D' will be merged together. Also areas 'E' and 'F' will be merged together with.
+
+```{r}
+modeling <- setup %>%
+  factor_add(pol_yr) %>%
+  factor_add(area) %>%
+  factor_modify(area = custom_factor(area, mapping = c(1, 2, 3, 1, 4, 4))) %>%
+  model_fit()
+```
+
+Variate, on the other hand, will be converted to a numeric variable, simplifying the predictor to only one coefficient (supposing the polynomial degree is 1). This is usually done with originally continuous variables.
+
+Non-proportional variate (`type = 'non_prop')` is usually used when the distances between the categorical levels of a predictor are numerically similar. In this case a mapping vector has to be provided. These values will be substituted instead of the original values.
+
+```{r}
+modeling <- setup %>%
+  factor_add(pol_yr) %>%
+  factor_add(agecat) %>%
+  factor_modify(agecat = variate(agecat, type = 'non_prop', mapping = c(1, 2, 3, 4, 5, 6))) %>%
+  model_fit()
+```
+
+On the other hand, proportional variate (`type = 'prop'`) is best used when the distances between the categorical levels of a predictor are significantly different. In this case, the mapping will be created automatically.
+
+```{r}
+modeling <- setup %>% 
+  factor_add(pol_yr) %>% 
+  factor_add(veh_value) %>% 
+  factor_modify(veh_value = variate(veh_value, type = 'prop')) %>% 
+  model_fit()
+```
+
+However, it is required that the names of original levels contain a numeric range, as below.
+
+```{r}
+setup %>% 
+  explore_data(type = 'tabular', factors = 'veh_value')
+```
+
+## Save and compare
+After simplifying a model predictor, it might be useful to visualize changes. We can compare the current (latest) model to a previous reference model using `model_compare`. We can use `model_save` at any point of the workflow, to save a reference model. Note, that each model has to be fit using `model_fit` before saving.
+
+```{r}
+modeling <- setup %>%
+  factor_add(pol_yr) %>%
+  factor_add(agecat) %>%
+  model_fit() %>%
+  model_save('model1') %>%
+  factor_modify(agecat = variate(agecat, type = 'non_prop', mapping = c(1, 2, 3, 4, 5, 6))) %>%
+  model_fit()
+```
+
+We can use type 1 comparison to compare actual values against the fitted values of the comparison models.
+
+```{r, results = FALSE}
+modeling %>%
+  model_compare(with = 'model1', type = '1')
+```
+
+In addition, type 2 comparison will compare the predictions at base levels of the comparison models
+
+```{r, results = FALSE}
+modeling %>%
+  model_compare(with = 'model1', type = '2')
+```
+
+## Model revert
+If we ever decide to discard current model and revert to an older one (saved by `model_save`), we can do so, by using `model_revert`. This might also be useful if we want to run functions that work only on the current (latest) model in the workflow, like `model_visualize`. Moreover, this also helps to keep the workflow documented, instead of rewriting previous code.
+
+```{r}
+modeling <- setup %>%
+  factor_add(pol_yr) %>%
+  factor_add(agecat) %>%
+  model_fit() %>%
+  model_save('model1') %>%
+  factor_modify(agecat = variate(agecat, type = 'non_prop', mapping = c(1, 2, 3, 4, 5, 6))) %>%
+  model_fit() %>%
+  model_revert(to = 'model1') # from now on the two lines above have no effect (but they stay documented)
+```
+
+## Beta coefficients and triangles
+If we wish to inspect beta coefficients of the current (latest) model, we can do so by using `model_betas` function.
+
+```{r}
+modeling %>% 
+  model_betas()
+```
+
+If we want to instead look at the differences between coefficients of each predictor, we can do so by using setting `triangles = TRUE`.
+
+```{r}
+modeling %>% 
+  model_betas(triangles = TRUE)
+```
+
+## Lift charts
+We can produce a lift chart showing the comparison between actual and predicted values of target variable across groups of ordered observations. This can be done either for the latest model or for all saved models in the workflow. Note that, by default, the predictions will be created once and using the full training dataset.
+
+```{r, results = FALSE}
+modeling <- setup %>%
+  factor_add(pol_yr) %>%
+  factor_add(agecat) %>%
+  model_fit() %>%
+  model_save('model1') %>%
+  factor_add(veh_value) %>%
+  model_fit() %>%
+  model_save('model2') %>%
+  factor_add(veh_age) %>%
+  model_fit()
+
+modeling %>% 
+  model_lift(model = 'current') # can be also 'all'
+
+modeling %>% 
+  model_lift(model = 'current', buckets = 5) 
+```
+
+## Crossvalidation
+Crossvalidation lets us assess the model performance more realistically, but it's computationally more intensive. Using the `model_crossval` will trigger creation of multiple datasets and re-fitting of each model structure on all of them. Each record will be scored by a model trained on a dataset that didn't include that specific record.
+
+```{r}
+modeling_cv <- modeling %>%
+  model_crossval(cv_folds = 10, stratified = FALSE) # this is also the default
+```
+
+We can now look on the lift charts based on the crossvalidated predictions.
+
+```{r, results = FALSE}
+modeling_cv %>%
+  model_lift(data = 'crossval', model = 'current')
+
+modeling_cv %>%
+  model_lift(data = 'crossval', model = 'current', buckets = 5)
+```
+
+## Model performance
+We can use `model_performance` to compare the performance of multiple models present within the workflow. Each value on the plot represents a summarized performance metric for the corresponding model. Optionally, data can be grouped using `buckets` argument, before the mtric is computed. The plot then actually displays a comparison of multiple lift charts.
+
+```{r}
+modeling_cv %>%
+  model_performance(data = 'crossval', buckets = 10)
+  
+modeling_cv %>%
+  model_performance(data = 'crossval', buckets = 5)
+```
+
+## Model export
+If we are satisfied with the current (latest) model, we can export it and create a xlsx file. The spreadsheet will contain the charts, as well as relativities and weights for each predictor included in the model.
+
+```{r}
+modeling %>%
+  model_export('export_test.xlsx', overwrite = TRUE)
+```
+
+
+
+
+
+
+
