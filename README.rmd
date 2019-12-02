@@ -1,0 +1,97 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.height = 3,
+  fig.path = "man/figures/README-"
+)
+```
+
+# insuRglm
+
+Provides functions for GLM modeling in insurance context, which are:
+
+- **Effective**, helps you get things done with one-liners
+- **Concise**, with short and self-explanatory function names
+- **Self-documenting**, keeps the workflow documented, decreases the need to remove previous steps
+
+
+## Installation
+
+```{r, eval = FALSE}
+# Make sure you have devtools installed
+install.packages("devtools")
+
+# Then you can install from this repository
+devtools::install_github("realgabon/insuRglm@master", build_vignettes = TRUE)
+```
+
+## Documentation
+```{r, eval = FALSE}
+# Each function is documented
+?setup
+?model_visualize
+
+# See more in-depth usage examples in the main vignette
+vignette('insuRglm')
+```
+
+## Usage
+First step of using the package should always be the one-time `setup` function.
+
+```{r}
+data('sev_train')
+
+library(insuRglm)
+library(magrittr) # for the %>%
+
+setup <- setup(
+  data_train = train,
+  target = 'sev',
+  weight = 'numclaims',
+  family = 'gamma',
+  keep_cols = c('pol_nbr', 'exposure', 'premium')
+)
+```
+
+You can explore the target, data and correlations using functions `explore_target`, `explore_data` and `explore_corr`.
+
+```{r}
+setup %>% 
+  explore_target(lower_quantile = 0.05, upper_quantile = 0.95)
+
+setup %>% 
+  explore_data(type = 'tabular', factors = c('pol_yr', 'agecat'))
+```
+
+Add or remove predictors to model formula with `factor_add` and `factor_remove`
+
+```{r, results = FALSE}
+setup %>% 
+  factor_add(pol_yr) %>% 
+  factor_add(agecat)
+```
+
+Fit and visualize current model's predictors, as well as unfitted variables
+
+```{r, results = FALSE}
+modeling <- setup %>% 
+  factor_add(pol_yr) %>% 
+  factor_add(agecat) %>% 
+  model_fit()
+
+
+modeling %>% 
+  model_visualize(factors = 'fitted')
+
+modeling %>% 
+  model_visualize(factors = 'unfitted')
+```
+
+
