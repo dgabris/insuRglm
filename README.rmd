@@ -15,7 +15,13 @@ knitr::opts_chunk$set(
 
 # insuRglm
 
-Provides functions for GLM modeling in insurance context, which are:
+Generalized linear model (GLM) is a flexible generalization of ordinary linear regression that allows for response variables that have error distribution models other than a normal distribution. The underlying model is still linear, but it is related to the response variable via a link function.
+
+This type of model is implemented in many software packages, including R base `glm` function. However, in insurance setting, the methodology for building GLM models is sometimes different from the usual use. While there's certainly an opportunity for automation to narrow down the predictor space, the core predictors are usually selected very carefully with almost manual approach. It is considered important to inspect every predictor from multiple angles and make sure it has both statistical and business significance.
+
+This approach is usually carried out through the use of specialized commercial software products, which offer graphical user interface and limit the possibility of any automation or customization. **The insuRglm package aims to provide an opensource and transparent alternative, which can be integrated into existing R workflows, thus allowing bigger degree of automation and customization.**
+
+The tools provided by this package are:
 
 - **Effective**, helps you get things done with one-liners
 - **Concise**, with short and self-explanatory function names
@@ -33,6 +39,9 @@ devtools::install_github("realgabon/insuRglm@master", build_vignettes = TRUE)
 ```
 
 ## Documentation
+
+The vignette can be also found [here](https://github.com/realgabon/insuRglm/tree/master/vignettes/insuRglm.md)
+
 ```{r, eval = FALSE}
 # Each function is documented
 ?setup
@@ -41,6 +50,8 @@ devtools::install_github("realgabon/insuRglm@master", build_vignettes = TRUE)
 # See more in-depth usage examples in the main vignette
 vignette('insuRglm')
 ```
+
+
 
 ## Usage
 First step of using the package should always be the one-time `setup` function.
