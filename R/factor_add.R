@@ -13,7 +13,7 @@
 #' data('sev_train')
 #'
 #' setup <- setup(
-#'   data_train = train,
+#'   data_train = sev_train,
 #'   target = 'sev',
 #'   weight = 'numclaims',
 #'   family = 'gamma',

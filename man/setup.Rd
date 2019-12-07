@@ -49,31 +49,52 @@ This object is subsequently used as a main input in most functions in the packag
 Short summary of the train/test datasets is written to the console
 }
 \examples{
-require(dplyr) # for the pipe operator
+require(dplyr) # for the pipe operator#'
+
+# poisson distribution target
+data('freq_train')
+
+setup <- setup(
+  data_train = freq_train,
+  target = 'freq',
+  offset = 'exposure',
+  family = 'poisson',
+  keep_cols = c('pol_nbr', 'premium')
+)
+
+# gamma distribution target
 data('sev_train')
-data('sev_test')
 
-head(train)
-
-# minimal
 setup <- setup(
-  data_train = train,
+  data_train = sev_train,
   target = 'sev',
   weight = 'numclaims',
   family = 'gamma',
   keep_cols = c('pol_nbr', 'exposure', 'premium')
 )
 
-# adding test set, specifying potential predictors manually
+# tweedie distribution - burning cost
+data('bc_train')
+
 setup <- setup(
-  data_train = train,
-  data_test = test,
-  target = 'sev',
-  weight = 'numclaims',
-  family = 'gamma',
-  simple_factors = c('agecat', 'veh_age', 'veh_body'),
-  keep_cols = c('pol_nbr', 'exposure', 'premium')
+  data_train = bc_train,
+  target = 'bc',
+  weight = 'exposure',
+  family = 'tweedie',
+  tweedie_p = 1.75, # use tweedie::tweedie.profile to determine the best value
+  keep_cols = c('pol_nbr', 'premium')
 )
 
+# tweedie distribution - loss ratio
+data('lr_train')
+
+setup <- setup(
+  data_train = lr_train,
+  target = 'lr',
+  weight = 'premium',
+  family = 'tweedie',
+  tweedie_p = 1.75, # use tweedie::tweedie.profile to determine the best value
+  keep_cols = c('pol_nbr', 'exposure')
+)
 
 }

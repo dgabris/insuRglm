@@ -34,13 +34,15 @@
 #   train_rows <- sample(1:nrow(df), size = train_size)
 #   test_rows <- setdiff(1:nrow(df), train_rows)
 #
-#   train <- df[train_rows, ]
-#   rownames(train) <- NULL
-#   save(train, file = file.path('data', paste0(name, '_train.rda')))
+#   train_nm <- paste0(name, '_train')
+#   assign(train_nm, df[train_rows, ])
+#   assign(train_nm, `rownames<-`(get(train_nm), NULL))
+#   save(list = train_nm, file = file.path('data', paste0(name, '_train.rda')))
 #
-#   test <- df[test_rows, ]
-#   rownames(test) <- NULL
-#   save(test, file = file.path('data', paste0(name, '_test.rda')))
+#   test_nm <- paste0(name, '_test')
+#   assign(test_nm, df[test_rows, ])
+#   assign(test_nm, `rownames<-`(get(test_nm), NULL))
+#   save(list = test_nm, file = file.path('data', paste0(name, '_test.rda')))
 # }
 #
 # # create target variables
@@ -84,7 +86,7 @@
 # )
 #
 # target_cols <- list(
-#   freq = c('numclaims', 'freq'), # TODO - make the poisson GLM work with offset
+#   freq = c('freq'), # TODO - make the poisson GLM work with offset
 #   sev = c('numclaims', 'sev'),
 #   bc = c('bc'),
 #   lr = c('lr'),
