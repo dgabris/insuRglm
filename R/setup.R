@@ -90,7 +90,9 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
 
     schema_test <- schema_test[match(names(schema_train), names(schema_test))]
 
-    if(any(schema_train != schema_test)) {
+    consistency_error <- dplyr::coalesce(schema_train != schema_test, TRUE)
+
+    if(any(consistency_error)) {
       stop(
         paste0(
           "'data_train' and 'data_test' don't have the same columns or their types. ",
@@ -108,7 +110,13 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     if(!weight %in% colnames(data_train)) stop('Weight variable not in the dataset')
   } else {
     weight <- '_weight'
-    lapply(dfs, function(x) x[weight] <- 1)
+
+    data_train[[weight]] <- 1
+
+    if(!is.null(data_test)) {
+      data_train[[weight]] <- 1
+    }
+
     message("'weight' was not provided, each record will have the same weight")
   }
 
@@ -136,39 +144,49 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     stop("Some of the 'simple_factors' are not in the dataset")
   }
 
-  if(any(vapply(data_train[simple_factors], class, character(1)) != 'factor')) {
-    levels_length <- vapply(data_train[simple_factors], function(x) length(unique(x)), integer(1))
+  levels_length <- vapply(data_train[simple_factors], function(x) length(unique(x)), integer(1))
 
-    if(any(levels_length > 255)) {
-      stop(
-        paste0(
-          "Tried coercing the predictors to 'factor' class, but some of them have more than 255 unique values: ",
-          paste0(simple_factors[levels_length > 255], collapse = ', '),
-          ". If these are not predictors, but columns you want to keep, please include them in 'keep_cols' argument"
-        )
+  if(any(levels_length > 255)) {
+    stop(
+      paste0(
+        "Some of the 'simple_factors' columns have more than 255 unique values: ",
+        paste0(simple_factors[levels_length > 255], collapse = ", "),
+        ". If these are not predictors, but columns you want to keep, please include them in 'keep_cols' argument"
       )
-    } else {
-      data_train[simple_factors] <- lapply(data_train[simple_factors], function(x) {
+    )
+  }
+
+  if(any(vapply(data_train[simple_factors], class, character(1)) != 'factor')) {
+    data_train[simple_factors] <- lapply(data_train[simple_factors], function(x) {
+      if(!inherits(x, 'factor')) as.factor(x) else x
+    })
+
+    if(!is.null(data_test)) {
+      data_test[simple_factors] <- lapply(data_test[simple_factors], function(x) {
         if(!inherits(x, 'factor')) as.factor(x) else x
       })
-
-      if(!is.null(data_test)) {
-        data_test[simple_factors] <- lapply(data_test[simple_factors], function(x) {
-          if(!inherits(x, 'factor')) as.factor(x) else x
-        })
-      }
-
-      message("All the predictors are now coerced to 'factor' class")
     }
+
+    message("All the predictors are now coerced to 'factor' class")
   }
 
   stopifnot(all(vapply(data_train[simple_factors], class, character(1)) == "factor"))
 
   family <- match.arg(family)
 
-  if(family %in% c('poisson') && is.null(offset)) {
-    message("No 'offset' provided for family 'poisson', will treat 'weight' as 'offset'")
-    offset <- weight
+  if(family %in% c('poisson')) {
+    if(is.null(offset)) {
+      message("No 'offset' provided for family 'poisson', will treat 'weight' as 'offset'")
+      offset <- weight
+
+      weight <- '_weight'
+
+      data_train[[weight]] <- 1
+
+      if(!is.null(data_test)) {
+        data_train[[weight]] <- 1
+      }
+    }
   }
 
   if(family %in% c('poisson', 'gamma') && !is.null(tweedie_p)) {
@@ -190,12 +208,24 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     tweedie = statmod::tweedie(var.power = tweedie_p, link.power = 0)
   )
 
-  all_data <- dplyr::bind_rows(data_train, data_test)
+  if(!is.null(data_test)) {
+    for(var in simple_factors) {
+      train_levels <- levels(data_train[[var]])
+      test_levels <- levels(data_test[[var]])
+
+      not_in_train <- test_levels[!(test_levels %in% train_levels)]
+
+      if(length(not_in_train) > 0) {
+        stop(paste0(var, " has these values in test set, that are not present in train: ", paste0(not_in_train, collapse = ", ")))
+      }
+
+      data_test[[var]] <- factor(data_test[[var]], levels = train_levels)
+    }
+  }
 
   for(var in simple_factors) {
-
-    orig_levels <- levels(all_data[[var]])
-    levels_by_weight <- names(sort(tapply(all_data[[weight]], all_data[[var]], sum), decreasing = TRUE))
+    orig_levels <- levels(data_train[[var]])
+    levels_by_weight <- names(sort(tapply(data_train[[weight]], data_train[[var]], sum), decreasing = TRUE))
     base_level <- levels_by_weight[[1]]
 
     data_train[[var]] <- simple_factor(data_train[[var]], orig_levels, base_level)
@@ -204,6 +234,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
       data_test[[var]] <- simple_factor(data_test[[var]], orig_levels, base_level)
     }
   }
+
 
   current_model <- structure(
     list(
