@@ -1,4 +1,4 @@
-beta_triangles <- function(betas, glm) {
+beta_triangles <- function(betas, glm, predictor_attrs) {
   stopifnot(inherits(betas, "data.frame"))
   stopifnot(inherits(glm, "glm"))
 
@@ -49,6 +49,15 @@ beta_triangles <- function(betas, glm) {
         std_error_vector[[i]] <- sqrt(var_diff) / abs(estimate_diff)
       }
 
+      this_attrs <- predictor_attrs[[predictor]]
+
+      if("custom_factor" %in% this_attrs$class) {
+        base_lvl <- as.character(this_attrs$mapping[[this_attrs$base_level]])
+      } else {
+        base_lvl <- as.character(this_attrs$base_level)
+      }
+      base_lvl_sym <- rlang::sym(base_lvl)
+
       combinations_df <- combinations_df %>%
         dplyr::mutate(std_error_pct = paste0(round(std_error_vector * 100), "%")) %>%
         dplyr::mutate_at(c("a", "b"), stringr::str_replace_all, "`", "") %>%
@@ -56,6 +65,9 @@ beta_triangles <- function(betas, glm) {
         dplyr::mutate_at(c("a", "b"), stringr::str_replace, "^ ", "") %>%
         dplyr::mutate_at(c("a", "b"), function(x) factor(x, levels = unique(x))) %>%
         tidyr::spread(key = b, value = std_error_pct) %>%
+        dplyr::mutate(!!base_lvl_sym := filtered_betas$std_error_pct) %>%
+        tibble::add_row(a = base_lvl, .before = 1) %>%
+        dplyr::select(a, !!base_lvl_sym, everything()) %>%
         dplyr::rename(!!predictor_sym := a)
 
       n_row <- nrow(combinations_df)

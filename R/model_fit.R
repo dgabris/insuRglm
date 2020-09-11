@@ -97,7 +97,8 @@ model_fit <- function(setup) {
   )
 
   betas <- betas(predictors, broom::tidy(glm))
-  beta_triangles <- beta_triangles(betas, glm)
+  predictor_attrs <- lapply(setup$data_train[predictors], attributes)
+  beta_triangles <- beta_triangles(betas, glm, predictor_attrs)
   model_stats <- dplyr::bind_cols(broom::glance(glm), dispersion = summary(glm)$dispersion)
   train_predictions <- predict(glm, newdata = train, type = "response")
   test_predictions <- if(test_exists) predict(glm, newdata = test, type = "response") else NULL
