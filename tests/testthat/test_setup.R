@@ -1,17 +1,3 @@
-library("insuRglm")
-library("dplyr")
-
-data("sev_train")
-data("sev_test")
-
-data("freq_train")
-
-data('bc_train')
-
-no_print <- function(expr) {
-  invisible(capture.output(expr))
-}
-
 context("Setup - Input data")
 
 test_that("input datasets must be of class data.frame", {

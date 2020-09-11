@@ -1,23 +1,4 @@
-require(dplyr) # for the pipe operator
-data('sev_train')
-data('sev_test')
-
-no_print <- function(expr) {
-  invisible(capture.output(expr))
-}
-
-args <- list(
-  data_train = sev_train,
-  data_test = sev_test,
-  target = 'sev',
-  weight = 'numclaims',
-  family = 'gamma',
-  keep_cols = c('pol_nbr', 'exposure', 'premium')
-)
-
-no_print(setup <- do.call(setup, args))
-
-setup <- setup %>%
+setup <- sev_setup %>%
   factor_add(pol_yr)
 
 
