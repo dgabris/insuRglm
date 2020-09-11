@@ -13,6 +13,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
+  fig.height = 3,
   fig.width = 6,
   fig.path = "../man/figures/insuRglm_vignette-"
 )
