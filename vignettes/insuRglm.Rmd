@@ -32,7 +32,7 @@ To illustrate the use of this package, we will use modified subset of insurance 
 
 ```{r}
 data('sev_train')
-head(train)
+head(sev_train)
 ```
 
 ## Setup your workflow
@@ -40,7 +40,7 @@ First step of using the package should always be the one-time `setup` function.
 
 ```{r}
 setup <- setup(
-  data_train = train,
+  data_train = sev_train,
   target = 'sev',
   weight = 'numclaims',
   family = 'gamma',
