@@ -843,314 +843,477 @@ test_that("setup produces what it should", {
   # Copy & paste from console, hightlight the copied code
   # 'Code' -> 'Reformat Code' (or CTRL + Shift + A)
 
-  correct_result <-
-    structure(
-      list(
-        target = "sev",
-        weight = "numclaims",
-        offset = NULL,
-        family = structure(
-          list(
-            family = "Gamma",
-            link = "log",
-            linkfun = function (mu)
-              log(mu),
-            linkinv = function (eta)
-              pmax(exp(eta), .Machine$double.eps),
-            variance = function (mu)
-              mu ^ 2,
-            dev.resids = function (y, mu, wt)
-              - 2 * wt * (log(ifelse(y == 0, 1, y /
-                                       mu)) - (y - mu) / mu),
-            aic = function (y,
-                            n, mu, wt, dev)
-            {
-              n <- sum(wt)
-              disp <- dev / n
-              - 2 * sum(dgamma(y, 1 / disp, scale = mu * disp, log = TRUE) *
-                          wt) + 2
-            },
-            mu.eta = function (eta)
-              pmax(exp(eta), .Machine$double.eps),
-            initialize = expression({
-              if (any(y <= 0))
-                stop("non-positive values not allowed for the 'gamma' family")
-              n <-
-                rep.int(1, nobs)
-              mustart <- y
-            }),
-            validmu = function (mu)
-              all(is.finite(mu)) &&
-              all(mu > 0),
-            valideta = function (eta)
-              TRUE,
-            simulate = function (object, nsim)
-            {
-              wts <- object$prior.weights
-              if (any(wts != 1))
-                message("using weights as shape parameters")
-              ftd <-
-                fitted(object)
-              shape <-
-                MASS::gamma.shape(object)$alpha * wts
-              rgamma(nsim * length(ftd), shape = shape, rate = shape /
-                       ftd)
-            }
+  correct_result <- structure(
+    list(
+      target = "sev",
+      weight = "numclaims",
+      offset = NULL,
+      family = structure(
+        list(
+          family = "Gamma",
+          link = "log",
+          linkfun = function (mu)
+            log(mu),
+          linkinv = function (eta)
+            pmax(exp(eta), .Machine$double.eps),
+          variance = function (mu)
+            mu ^ 2,
+          dev.resids = function (y, mu, wt)
+            - 2 * wt * (log(ifelse(y == 0, 1, y / mu)) - (y - mu) /
+                          mu),
+          aic = function (y,
+                          n, mu, wt, dev)
+          {
+            n <- sum(wt)
+            disp <- dev / n
+            - 2 * sum(dgamma(y, 1 / disp, scale = mu * disp, log = TRUE) *
+                        wt) + 2
+          },
+          mu.eta = function (eta)
+            pmax(exp(eta), .Machine$double.eps),
+          initialize = expression({
+            if (any(y <= 0))
+              stop("non-positive values not allowed for the 'gamma' family")
+            n <- rep.int(1, nobs)
+            mustart <- y
+          }),
+          validmu = function (mu)
+            all(is.finite(mu)) &&
+            all(mu > 0),
+          valideta = function (eta)
+            TRUE,
+          simulate = function (object, nsim)
+          {
+            wts <- object$prior.weights
+            if (any(wts != 1))
+              message("using weights as shape parameters")
+            ftd <- fitted(object)
+            shape <-
+              MASS::gamma.shape(object)$alpha * wts
+            rgamma(nsim * length(ftd), shape = shape, rate = shape /
+                     ftd)
+          }
+        ),
+        class = "family"
+      ),
+      simple_factors = c(
+        "pol_yr",
+        "gender",
+        "agecat",
+        "area",
+        "veh_body",
+        "veh_age",
+        "veh_value"
+      ),
+      seed = NULL,
+      data_train = structure(
+        list(
+          pol_nbr = c(
+            "334473",
+            "245147",
+            "387658",
+            "352370",
+            "377082",
+            "154953",
+            "335537",
+            "424416",
+            "279269",
+            "457203",
+            "347972",
+            "425162",
+            "450359",
+            "141285",
+            "406732"
           ),
-          class = "family"
-        ),
-        simple_factors = c(
-          "pol_yr",
-          "gender",
-          "agecat",
-          "area",
-          "veh_body",
-          "veh_age",
-          "veh_value"
-        ),
-        seed = NULL,
-        data_train = structure(
-          list(
-            pol_nbr = c(
-              "334473",
-              "245147",
-              "387658",
-              "352370",
-              "377082",
-              "154953",
-              "335537",
-              "424416",
-              "279269",
-              "457203",
-              "347972",
-              "425162",
-              "450359",
-              "141285",
-              "406732"
+          pol_yr = structure(
+            c(3L, 4L, 3L, 4L, 1L, 5L, 4L,
+              5L, 1L, 4L, 4L, 4L, 2L, 4L, 3L),
+            .Label = c("2000", "2001",
+                       "2002", "2003", "2004"),
+            class = c("simple_factor", "factor"),
+            orig_levels = c("2000", "2001", "2002", "2003", "2004"),
+            base_level = "2003"
+          ),
+          exposure = c(
+            0.3011635866,
+            0.3367556468,
+            0.8405201916,
+            0.8021902806,
+            0.3668720055,
+            0.7446954141,
+            0.090349076,
+            0.4982888433,
+            0.925393566,
+            0.1889117043,
+            0.8295687885,
+            0.3942505133,
+            0.7912388775,
+            0.9226557153,
+            0.6652977413
+          ),
+          premium = c(
+            265.235264554667,
+            253.899815785158,
+            630.075372211064,
+            643.053897524987,
+            160.956254138386,
+            430.78264233547,
+            54.0257808363787,
+            340.063462315072,
+            608.690463890544,
+            216.103123272719,
+            1358.75906469446,
+            307.498515311814,
+            469.706354879722,
+            2680.62898468824,
+            1726.79635032368
+          ),
+          gender = structure(
+            c(1L,
+              2L, 1L, 1L, 2L, 2L, 2L, 1L, 1L, 2L, 1L, 1L, 1L, 1L, 1L),
+            .Label = c("F",
+                       "M"),
+            class = c("simple_factor", "factor"),
+            orig_levels = c("F",
+                            "M"),
+            base_level = "F"
+          ),
+          agecat = structure(
+            c(4L, 2L, 3L,
+              3L, 4L, 4L, 6L, 2L, 5L, 1L, 1L, 3L, 3L, 2L, 3L),
+            .Label = c("1",
+                       "2", "3", "4", "5", "6"),
+            class = c("simple_factor", "factor"),
+            orig_levels = c("1", "2", "3", "4", "5", "6"),
+            base_level = "3"
+          ),
+          area = structure(
+            c(5L, 2L, 1L, 3L, 3L, 1L, 4L, 3L, 2L,
+              1L, 1L, 3L, 3L, 1L, 1L),
+            .Label = c("A", "B", "C", "D",
+                       "E", "F"),
+            class = c("simple_factor", "factor"),
+            orig_levels = c("A",
+                            "B", "C", "D", "E", "F"),
+            base_level = "A"
+          ),
+          veh_body = structure(
+            c(10L,
+              11L, 4L, 10L, 4L, 10L, 10L, 10L, 11L, 4L, 4L, 10L, 4L,
+              11L, 11L),
+            .Label = c(
+              "BUS",
+              "CONVT",
+              "COUPE",
+              "HBACK",
+              "HDTOP",
+              "MCARA",
+              "MIBUS",
+              "PANVN",
+              "RDSTR",
+              "SEDAN",
+              "STNWG",
+              "TRUCK",
+              "UTE"
             ),
-            pol_yr = structure(
-              c(3L, 4L, 3L, 4L, 1L, 5L, 4L,
-                5L, 1L, 4L, 4L, 4L, 2L, 4L, 3L),
-              .Label = c("2000", "2001",
-                         "2002", "2003", "2004"),
+            class = c("simple_factor",
+                      "factor"),
+            orig_levels = c(
+              "BUS",
+              "CONVT",
+              "COUPE",
+              "HBACK",
+              "HDTOP",
+              "MCARA",
+              "MIBUS",
+              "PANVN",
+              "RDSTR",
+              "SEDAN",
+              "STNWG",
+              "TRUCK",
+              "UTE"
+            ),
+            base_level = "SEDAN"
+          ),
+          veh_age = structure(
+            c(1L,
+              4L, 2L, 2L, 1L, 2L, 1L, 3L, 1L, 3L, 2L, 2L, 1L, 1L, 2L),
+            .Label = c("1", "2", "3", "4"),
+            class = c("simple_factor",
+                      "factor"),
+            orig_levels = c("1", "2", "3", "4"),
+            base_level = "1"
+          ),
+          veh_value = structure(
+            c(5L, 2L, 4L, 4L, 3L, 4L, 5L, 2L,
+              5L, 1L, 2L, 4L, 3L, 5L, 5L),
+            .Label = c(
+              "[0,0.9]",
+              "(0.9,1.32]",
+              "(1.32,1.71]",
+              "(1.71,2.44]",
+              "(2.44,34.6]"
+            ),
+            class = c("simple_factor",
+                      "factor"),
+            orig_levels = c(
+              "[0,0.9]",
+              "(0.9,1.32]",
+              "(1.32,1.71]",
+              "(1.71,2.44]",
+              "(2.44,34.6]"
+            ),
+            base_level = "(2.44,34.6]"
+          ),
+          numclaims = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 1L, 1L,
+                        1L, 1L, 1L, 1L, 1L),
+          sev = c(
+            200,
+            1888.829998,
+            200,
+            200,
+            7766.5299988,
+            1186.363636,
+            480,
+            254.090000155,
+            353.76999998,
+            4450.039978,
+            353.76999998,
+            353.76999998,
+            210.35000229,
+            353.76999998,
+            383.31999969
+          )
+        ),
+        row.names = c(NA,-15L),
+        class = c("tbl_df",
+                  "tbl", "data.frame")
+      ),
+      data_test = structure(
+        list(
+          pol_nbr = c("214771",
+                      "489640", "344317", "487354", "382906"),
+          pol_yr = structure(
+            c(5L,
+              1L, 1L, 4L, 4L),
+            .Label = c("2000", "2001", "2002", "2003",
+                       "2004"),
+            class = c("simple_factor", "factor"),
+            orig_levels = c("2000",
+                            "2001", "2002", "2003", "2004"),
+            base_level = "2003"
+          ),
+          exposure = c(
+            0.7118412047,
+            0.4873374401,
+            0.7091033539,
+            0.810403833,
+            0.925393566
+          ),
+          premium = c(
+            505.854039170545,
+            899.575517800543,
+            479.327546863998,
+            437.188861409991,
+            409.00149747586
+          ),
+          gender = structure(
+            c(1L, 2L, 2L, 1L, 1L),
+            .Label = c("F",
+                       "M"),
+            class = c("simple_factor", "factor"),
+            orig_levels = c("F",
+                            "M"),
+            base_level = "F"
+          ),
+          agecat = structure(
+            c(3L, 1L, 3L,
+              2L, 4L),
+            .Label = c("1", "2", "3", "4", "5", "6"),
+            class = c("simple_factor",
+                      "factor"),
+            orig_levels = c("1", "2", "3", "4", "5", "6"),
+            base_level = "3"
+          ),
+          area = structure(
+            c(3L, 2L, 1L, 4L, 3L),
+            .Label = c("A",
+                       "B", "C", "D", "E", "F"),
+            class = c("simple_factor",
+                      "factor"),
+            orig_levels = c("A", "B", "C", "D", "E", "F"),
+            base_level = "A"
+          ),
+          veh_body = structure(
+            c(11L, 4L,
+              4L, 11L, 10L),
+            .Label = c(
+              "BUS",
+              "CONVT",
+              "COUPE",
+              "HBACK",
+              "HDTOP",
+              "MCARA",
+              "MIBUS",
+              "PANVN",
+              "RDSTR",
+              "SEDAN",
+              "STNWG",
+              "TRUCK",
+              "UTE"
+            ),
+            class = c("simple_factor",
+                      "factor"),
+            orig_levels = c(
+              "BUS",
+              "CONVT",
+              "COUPE",
+              "HBACK",
+              "HDTOP",
+              "MCARA",
+              "MIBUS",
+              "PANVN",
+              "RDSTR",
+              "SEDAN",
+              "STNWG",
+              "TRUCK",
+              "UTE"
+            ),
+            base_level = "SEDAN"
+          ),
+          veh_age = structure(
+            c(3L,
+              1L, 2L, 4L, 3L),
+            .Label = c("1", "2", "3", "4"),
+            class = c("simple_factor",
+                      "factor"),
+            orig_levels = c("1", "2", "3", "4"),
+            base_level = "1"
+          ),
+          veh_value = structure(
+            c(3L, 3L, 3L, 1L, 3L),
+            .Label = c(
+              "[0,0.9]",
+              "(0.9,1.32]",
+              "(1.32,1.71]",
+              "(1.71,2.44]",
+              "(2.44,34.6]"
+            ),
+            class = c("simple_factor", "factor"),
+            orig_levels = c(
+              "[0,0.9]",
+              "(0.9,1.32]",
+              "(1.32,1.71]",
+              "(1.71,2.44]",
+              "(2.44,34.6]"
+            ),
+            base_level = "(2.44,34.6]"
+          ),
+          numclaims = c(1L, 1L,
+                        1L, 1L, 1L),
+          sev = c(200, 3981.2299957, 1265.4499969,
+                  2723.0399933, 200)
+        ),
+        row.names = c(NA,-5L),
+        class = c("tbl_df",
+                  "tbl", "data.frame")
+      ),
+      current_model = structure(
+        list(
+          target = "sev",
+          weight = "numclaims",
+          offset = NULL,
+          family = structure(
+            list(
+              family = "Gamma",
+              link = "log",
+              linkfun = function (mu)
+                log(mu),
+              linkinv = function (eta)
+                pmax(exp(eta), .Machine$double.eps),
+              variance = function (mu)
+                mu ^
+                2,
+              dev.resids = function (y, mu, wt)
+                -
+                2 * wt * (log(ifelse(y == 0, 1, y / mu)) - (y - mu) / mu),
+              aic = function (y, n, mu, wt, dev)
+              {
+                n <- sum(wt)
+                disp <-
+                  dev / n
+                -
+                  2 * sum(dgamma(y, 1 / disp, scale = mu * disp,
+                                 log = TRUE) * wt) + 2
+              },
+              mu.eta = function (eta)
+                pmax(exp(eta), .Machine$double.eps),
+              initialize = expression({
+                if (any(y <= 0))
+                  stop("non-positive values not allowed for the 'gamma' family")
+                n <-
+                  rep.int(1, nobs)
+                mustart <-
+                  y
+              }),
+              validmu = function (mu)
+                all(is.finite(mu)) &&
+                all(mu > 0),
+              valideta = function (eta)
+                TRUE,
+              simulate = function (object, nsim)
+              {
+                wts <- object$prior.weights
+                if (any(wts != 1))
+                  message("using weights as shape parameters")
+                ftd <-
+                  fitted(object)
+                shape <-
+                  MASS::gamma.shape(object)$alpha * wts
+                rgamma(nsim * length(ftd), shape = shape, rate = shape /
+                         ftd)
+              }
+            ),
+            class = "family"
+          ),
+          predictors = NULL,
+          data_attrs = list(
+            pol_yr = list(
+              levels = c("2000", "2001", "2002",
+                         "2003", "2004"),
               class = c("simple_factor", "factor"),
-              orig_levels = c("2000", "2001", "2002", "2003", "2004"),
+              orig_levels = c("2000", "2001", "2002", "2003",
+                              "2004"),
               base_level = "2003"
             ),
-            exposure = c(
-              0.3011635866,
-              0.3367556468,
-              0.8405201916,
-              0.8021902806,
-              0.3668720055,
-              0.7446954141,
-              0.090349076,
-              0.4982888433,
-              0.925393566,
-              0.1889117043,
-              0.8295687885,
-              0.3942505133,
-              0.7912388775,
-              0.9226557153,
-              0.6652977413
-            ),
-            premium = c(
-              265.235264554667,
-              253.899815785158,
-              630.075372211064,
-              643.053897524987,
-              160.956254138386,
-              430.78264233547,
-              54.0257808363787,
-              340.063462315072,
-              608.690463890544,
-              216.103123272719,
-              1358.75906469446,
-              307.498515311814,
-              469.706354879722,
-              2680.62898468824,
-              1726.79635032368
-            ),
-            gender = structure(
-              c(1L,
-                2L, 1L, 1L, 2L, 2L, 2L, 1L, 1L, 2L, 1L, 1L, 1L, 1L, 1L),
-              .Label = c("F",
+            gender = list(
+              levels = c("F",
                          "M"),
               class = c("simple_factor", "factor"),
               orig_levels = c("F",
                               "M"),
               base_level = "F"
             ),
-            agecat = structure(
-              c(4L, 2L, 3L,
-                3L, 4L, 4L, 6L, 2L, 5L, 1L, 1L, 3L, 3L, 2L, 3L),
-              .Label = c("1",
+            agecat = list(
+              levels = c("1",
                          "2", "3", "4", "5", "6"),
-              class = c("simple_factor", "factor"),
-              orig_levels = c("1", "2", "3", "4", "5", "6"),
+              class = c("simple_factor",
+                        "factor"),
+              orig_levels = c("1", "2", "3", "4", "5",
+                              "6"),
               base_level = "3"
             ),
-            area = structure(
-              c(5L, 2L, 1L, 3L, 3L, 1L, 4L, 3L, 2L,
-                1L, 1L, 3L, 3L, 1L, 1L),
-              .Label = c("A", "B", "C", "D",
-                         "E", "F"),
-              class = c("simple_factor", "factor"),
-              orig_levels = c("A",
-                              "B", "C", "D", "E", "F"),
-              base_level = "A"
-            ),
-            veh_body = structure(
-              c(10L,
-                11L, 4L, 10L, 4L, 10L, 10L, 10L, 11L, 4L, 4L, 10L, 4L,
-                11L, 11L),
-              .Label = c(
-                "BUS",
-                "CONVT",
-                "COUPE",
-                "HBACK",
-                "HDTOP",
-                "MCARA",
-                "MIBUS",
-                "PANVN",
-                "RDSTR",
-                "SEDAN",
-                "STNWG",
-                "TRUCK",
-                "UTE"
-              ),
-              class = c("simple_factor",
-                        "factor"),
-              orig_levels = c(
-                "BUS",
-                "CONVT",
-                "COUPE",
-                "HBACK",
-                "HDTOP",
-                "MCARA",
-                "MIBUS",
-                "PANVN",
-                "RDSTR",
-                "SEDAN",
-                "STNWG",
-                "TRUCK",
-                "UTE"
-              ),
-              base_level = "SEDAN"
-            ),
-            veh_age = structure(
-              c(1L,
-                4L, 2L, 2L, 1L, 2L, 1L, 3L, 1L, 3L, 2L, 2L, 1L, 1L, 2L),
-              .Label = c("1", "2", "3", "4"),
-              class = c("simple_factor",
-                        "factor"),
-              orig_levels = c("1", "2", "3", "4"),
-              base_level = "1"
-            ),
-            veh_value = structure(
-              c(5L, 2L, 4L, 4L, 3L, 4L, 5L, 2L,
-                5L, 1L, 2L, 4L, 3L, 5L, 5L),
-              .Label = c(
-                "[0,0.9]",
-                "(0.9,1.32]",
-                "(1.32,1.71]",
-                "(1.71,2.44]",
-                "(2.44,34.6]"
-              ),
-              class = c("simple_factor",
-                        "factor"),
-              orig_levels = c(
-                "[0,0.9]",
-                "(0.9,1.32]",
-                "(1.32,1.71]",
-                "(1.71,2.44]",
-                "(2.44,34.6]"
-              ),
-              base_level = "(2.44,34.6]"
-            ),
-            numclaims = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 1L, 1L,
-                          1L, 1L, 1L, 1L, 1L),
-            sev = c(
-              200,
-              1888.829998,
-              200,
-              200,
-              7766.5299988,
-              1186.363636,
-              480,
-              254.090000155,
-              353.76999998,
-              4450.039978,
-              353.76999998,
-              353.76999998,
-              210.35000229,
-              353.76999998,
-              383.31999969
-            )
-          ),
-          row.names = c(NA, -15L),
-          class = c("tbl_df",
-                    "tbl", "data.frame")
-        ),
-        data_test = structure(
-          list(
-            pol_nbr = c("214771",
-                        "489640", "344317", "487354", "382906"),
-            pol_yr = structure(
-              c(5L,
-                1L, 1L, 4L, 4L),
-              .Label = c("2000", "2001", "2002", "2003",
-                         "2004"),
-              class = c("simple_factor", "factor"),
-              orig_levels = c("2000",
-                              "2001", "2002", "2003", "2004"),
-              base_level = "2003"
-            ),
-            exposure = c(
-              0.7118412047,
-              0.4873374401,
-              0.7091033539,
-              0.810403833,
-              0.925393566
-            ),
-            premium = c(
-              505.854039170545,
-              899.575517800543,
-              479.327546863998,
-              437.188861409991,
-              409.00149747586
-            ),
-            gender = structure(
-              c(1L, 2L, 2L, 1L, 1L),
-              .Label = c("F",
-                         "M"),
-              class = c("simple_factor", "factor"),
-              orig_levels = c("F",
-                              "M"),
-              base_level = "F"
-            ),
-            agecat = structure(
-              c(3L, 1L, 3L,
-                2L, 4L),
-              .Label = c("1", "2", "3", "4", "5", "6"),
-              class = c("simple_factor",
-                        "factor"),
-              orig_levels = c("1", "2", "3", "4", "5", "6"),
-              base_level = "3"
-            ),
-            area = structure(
-              c(3L, 2L, 1L, 4L, 3L),
-              .Label = c("A",
+            area = list(
+              levels = c("A",
                          "B", "C", "D", "E", "F"),
               class = c("simple_factor",
                         "factor"),
-              orig_levels = c("A", "B", "C", "D", "E", "F"),
+              orig_levels = c("A", "B", "C", "D", "E",
+                              "F"),
               base_level = "A"
             ),
-            veh_body = structure(
-              c(11L, 4L,
-                4L, 11L, 10L),
-              .Label = c(
+            veh_body = list(
+              levels = c(
                 "BUS",
                 "CONVT",
                 "COUPE",
@@ -1165,8 +1328,7 @@ test_that("setup produces what it should", {
                 "TRUCK",
                 "UTE"
               ),
-              class = c("simple_factor",
-                        "factor"),
+              class = c("simple_factor", "factor"),
               orig_levels = c(
                 "BUS",
                 "CONVT",
@@ -1184,25 +1346,23 @@ test_that("setup produces what it should", {
               ),
               base_level = "SEDAN"
             ),
-            veh_age = structure(
-              c(3L,
-                1L, 2L, 4L, 3L),
-              .Label = c("1", "2", "3", "4"),
-              class = c("simple_factor",
-                        "factor"),
+            veh_age = list(
+              levels = c("1",
+                         "2", "3", "4"),
+              class = c("simple_factor", "factor"),
               orig_levels = c("1", "2", "3", "4"),
               base_level = "1"
             ),
-            veh_value = structure(
-              c(3L, 3L, 3L, 1L, 3L),
-              .Label = c(
+            veh_value = list(
+              levels = c(
                 "[0,0.9]",
                 "(0.9,1.32]",
                 "(1.32,1.71]",
                 "(1.71,2.44]",
                 "(2.44,34.6]"
               ),
-              class = c("simple_factor", "factor"),
+              class = c("simple_factor",
+                        "factor"),
               orig_levels = c(
                 "[0,0.9]",
                 "(0.9,1.32]",
@@ -1211,82 +1371,14 @@ test_that("setup produces what it should", {
                 "(2.44,34.6]"
               ),
               base_level = "(2.44,34.6]"
-            ),
-            numclaims = c(1L, 1L,
-                          1L, 1L, 1L),
-            sev = c(200, 3981.2299957, 1265.4499969,
-                    2723.0399933, 200)
-          ),
-          row.names = c(NA, -5L),
-          class = c("tbl_df",
-                    "tbl", "data.frame")
+            )
+          )
         ),
-        current_model = structure(
-          list(
-            target = "sev",
-            weight = "numclaims",
-            offset = NULL,
-            family = structure(
-              list(
-                family = "Gamma",
-                link = "log",
-                linkfun = function (mu)
-                  log(mu),
-                linkinv = function (eta)
-                  pmax(exp(eta), .Machine$double.eps),
-                variance = function (mu)
-                  mu ^
-                  2,
-                dev.resids = function (y, mu, wt)
-                  -
-                  2 * wt * (log(ifelse(y == 0, 1, y / mu)) - (y - mu) / mu),
-                aic = function (y, n, mu, wt, dev)
-                {
-                  n <- sum(wt)
-                  disp <-
-                    dev / n
-                  -
-                    2 * sum(dgamma(y, 1 / disp, scale = mu * disp,
-                                   log = TRUE) * wt) + 2
-                },
-                mu.eta = function (eta)
-                  pmax(exp(eta), .Machine$double.eps),
-                initialize = expression({
-                  if (any(y <= 0))
-                    stop("non-positive values not allowed for the 'gamma' family")
-                  n <-
-                    rep.int(1, nobs)
-                  mustart <-
-                    y
-                }),
-                validmu = function (mu)
-                  all(is.finite(mu)) &&
-                  all(mu > 0),
-                valideta = function (eta)
-                  TRUE,
-                simulate = function (object, nsim)
-                {
-                  wts <- object$prior.weights
-                  if (any(wts != 1))
-                    message("using weights as shape parameters")
-                  ftd <-
-                    fitted(object)
-                  shape <-
-                    MASS::gamma.shape(object)$alpha * wts
-                  rgamma(nsim * length(ftd), shape = shape, rate = shape /
-                           ftd)
-                }
-              ),
-              class = "family"
-            ),
-            predictors = NULL
-          ),
-          class = "unfitted_model"
-        )
-      ),
-      class = "setup"
-    )
-
+        class = "unfitted_model"
+      )
+    ),
+    class = "setup"
+  )
 
   no_print(setup <- do.call(setup, args))
 

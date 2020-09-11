@@ -39,6 +39,9 @@ as_simple_factor <- function(x) {
   if(!inherits(x, 'simple_factor')) stop('Please use the predictor from the dataset')
 
   attr(x, "mapping") <- NULL
+  attr(x, "type") <- NULL
+  attr(x, "degree") <- NULL
+  attr(x, "prop_log") <- NULL
   class(x) <- setdiff(class(x), c("variate", "custom_factor", "offset"))
 
   x

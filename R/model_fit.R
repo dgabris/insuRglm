@@ -40,6 +40,8 @@ model_fit <- function(setup) {
     message("Note: Using test data and fitting intercept only.")
   }
 
+  data_attrs <- lapply(setup$data_train[setup$simple_factors], attributes)
+
   target <- setup$target
   weight <- setup$weight
   predictors <- setup$current_model$predictors
@@ -112,6 +114,7 @@ model_fit <- function(setup) {
       weight = weight,
       family = family,
       predictors = predictors,
+      data_attrs = data_attrs,
       betas = betas,
       beta_triangles = beta_triangles,
       model_stats = model_stats,

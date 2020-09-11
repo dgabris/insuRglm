@@ -40,5 +40,39 @@ model_revert <- function(setup, to) {
 
   setup$current_model <- setup$ref_models[[to]]
 
+  for(var in setup$simple_factors) {
+    var_sym <- rlang::sym(var)
+    wanted_attrs <- setup$current_model$data_attrs[[var]]
+    wanted_class <- wanted_attrs$class[[1]]
+
+    if(wanted_class == "simple_factor") {
+      setup <- setup %>%
+        factor_modify(!!var_sym := as_simple_factor(!!var_sym))
+    }
+
+    if(wanted_class == "custom_factor") {
+      mapping <- wanted_attrs$mapping
+      setup <- setup %>%
+        factor_modify(!!var_sym := custom_factor(!!var_sym, mapping = mapping))
+    }
+
+    if(wanted_class == "variate") {
+      type <- wanted_attrs$type
+      mapping <- wanted_attrs$mapping
+      degree <- wanted_attrs$degree
+      prop_log <- wanted_attrs$prop_log
+
+      setup <- setup %>%
+        factor_modify(!!var_sym := variate(!!var_sym, type = type, prop_log = prop_log, mapping = mapping, degree = degree))
+    }
+
+    if(wanted_class == "offset") {
+      mapping <- wanted_attrs$mapping
+      setup <- setup %>%
+        factor_modify(!!var_sym := offset_term(!!var_sym, mapping = mapping))
+    }
+
+  }
+
   setup
 }

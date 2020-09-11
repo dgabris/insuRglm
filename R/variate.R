@@ -91,8 +91,10 @@ variate <- function(x, type = c("prop", "non_prop"), prop_log = TRUE,  mapping =
   dplyr::distinct() %>%
   dplyr::arrange(orig_level)
 
+  attr(x, "type") <- type
   attr(x, "mapping") <- mapping
   attr(x, "degree") <- degree
+  attr(x, "prop_log") <- prop_log
   class(x) <- if(!inherits(x, "variate")) c("variate", class(x)) else class(x)
 
   x

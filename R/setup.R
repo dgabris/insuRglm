@@ -223,6 +223,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     }
   }
 
+  data_attrs <- list()
   for(var in simple_factors) {
     orig_levels <- levels(data_train[[var]])
     levels_by_weight <- names(sort(tapply(data_train[[weight]], data_train[[var]], sum), decreasing = TRUE))
@@ -233,6 +234,8 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     if(!is.null(data_test)) {
       data_test[[var]] <- simple_factor(data_test[[var]], orig_levels, base_level)
     }
+
+    data_attrs[[var]] <- attributes(data_train[[var]])
   }
 
 
@@ -242,7 +245,8 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
       weight = weight,
       offset = offset,
       family = family,
-      predictors = NULL
+      predictors = NULL,
+      data_attrs = data_attrs
     ),
     class = "unfitted_model"
   )
