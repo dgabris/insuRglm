@@ -3,17 +3,19 @@ crossval_predict <- function(data_train, model, cv_folds) {
   stopifnot(inherits(model, "fitted_model"))
   stopifnot(is.numeric(cv_folds) || is.integer(cv_folds))
 
+  data_attrs <- model$data_attrs
+  predictors <- model$predictors
+  train <- remap_predictors(data_train, predictors, data_attrs)
+
   target <- model$target
   target_sym <- rlang::sym(target)
-  predictors <- model$predictors
-  predictors_collapsed <- paste0(predictors, collapse = " + ")
-  formula <- as.formula(paste0(target, " ~ ", predictors_collapsed))
+  formula_lhs <- paste0(target, " ~ ")
+  formula_rhs <- prepare_formula_rhs(predictors, data_attrs, add_space = FALSE)
+  formula <- as.formula(paste0(formula_lhs, formula_rhs))
+
   family <- model$family
   weight <- model$weight
 
-  train <- remap_predictors(list(train = data_train), predictors)$train
-
-  nrows <- nrow(train)
   cv_predictions_list <- vector("list", cv_folds)
 
   for(fold in seq_len(cv_folds)) {
@@ -24,12 +26,10 @@ crossval_predict <- function(data_train, model, cv_folds) {
     fold_test <- train %>%
       dplyr::filter(cv_fold == fold)
 
-    weight_vector <- if(is.null(weight)) rep(1, nrow(fold_train)) else fold_train[[weight]]
-
     glm <- glm(
       formula = formula,
       family = family,
-      weights = weight_vector,
+      weights = fold_train[[weight]],
       data = fold_train
     )
 
@@ -42,7 +42,6 @@ crossval_predict <- function(data_train, model, cv_folds) {
 
   dplyr::bind_rows(!!!cv_predictions_list) %>%
     dplyr::arrange(id) %>%
-    dplyr::select(cv_pred_target) %>%
-    unlist(use.names = FALSE)
+    dplyr::pull(cv_pred_target)
 
 }
