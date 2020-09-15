@@ -1,12 +1,13 @@
 beta_triangles <- function(betas, glm, predictor_attrs) {
   stopifnot(inherits(betas, "data.frame"))
   stopifnot(inherits(glm, "glm"))
+  stopifnot(inherits(predictor_attrs, "list"))
 
   vcov_estimate_matrix <- vcov(glm)
   vcov_estimate_cols <- colnames(vcov_estimate_matrix)
   vcov_estimate_rows <- rownames(vcov_estimate_matrix)
 
-  predictors <- setdiff(unique(betas$factor), "(Intercept)")
+  predictors <- names(predictor_attrs)
   result <- list()
 
   for(predictor in predictors) {
@@ -16,9 +17,10 @@ beta_triangles <- function(betas, glm, predictor_attrs) {
     names <- filtered_betas$factor
     levels <- filtered_betas$actual_level
 
-    is_variate <- length(names) == 1 && stringr::str_detect(levels, "degree.")
+    this_attrs <- predictor_attrs[[predictor]]
+    this_class <- this_attrs$class[[1]]
 
-    if(!is_variate) {
+    if(this_class != "variate") {
       predictor_labels <- paste0("`", names, " `", levels)
       estimates <- setNames(filtered_betas$estimate, predictor_labels)
 
@@ -49,9 +51,7 @@ beta_triangles <- function(betas, glm, predictor_attrs) {
         std_error_vector[[i]] <- sqrt(var_diff) / abs(estimate_diff)
       }
 
-      this_attrs <- predictor_attrs[[predictor]]
-
-      if("custom_factor" %in% this_attrs$class) {
+      if(this_class == "custom_factor") {
         base_lvl <- as.character(this_attrs$mapping[[this_attrs$base_level]])
       } else {
         base_lvl <- as.character(this_attrs$base_level)

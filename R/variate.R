@@ -88,7 +88,9 @@ variate <- function(x, type = c("prop", "non_prop"), prop_log = TRUE,  mapping =
     actual_level = new_x,
     orthogonal_x
   ) %>%
-  dplyr::distinct() %>%
+  dplyr::group_by(orig_level) %>%
+  dplyr::summarize_all(dplyr::first) %>%
+  dplyr::ungroup() %>%
   dplyr::arrange(orig_level)
 
   attr(x, "type") <- type

@@ -2,7 +2,7 @@ betas <- function(predictors, broom_coefs) {
 
   broom_coefs <- broom_coefs %>%
     dplyr::mutate(term = stringr::str_replace_all(term, "`", "")) %>%
-    dplyr::mutate(term = stringr::str_replace(term, "(poly\\()(.+)( , degree = )(.)(\\))(.?)", "\\2 degree\\4"))
+    dplyr::mutate(term = stringr::str_replace_all(term, c("poly\\(" = "", " , " = " ", " = [0-9]{1}\\)" = "")))
 
   intercept_coef <- broom_coefs %>%
     dplyr::filter(term == "(Intercept)") %>%
