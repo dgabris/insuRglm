@@ -1,4 +1,4 @@
-factor_tables <- function(setup, betas, predictions) {
+factor_tables <- function(setup, betas, current_baseline, predictions) {
   train <- setup$data_train
   target <- setup$target
   weight <- setup$weight
@@ -44,7 +44,7 @@ factor_tables <- function(setup, betas, predictions) {
       x_betas <- betas %>% dplyr::filter(factor %in% c("(Intercept)", var))
     }
 
-    model_avg <- compute_model_avg(x, x_betas)
+    model_avg <- compute_model_avg(x, x_betas, current_baseline)
 
     one_table <- dplyr::bind_cols(
       factor = rep(var, length(mapping)),
@@ -54,8 +54,8 @@ factor_tables <- function(setup, betas, predictions) {
     dplyr::left_join(fitted_avg, by = c("orig_level")) %>%
     dplyr::left_join(model_avg, by = c("orig_level"))
 
-    nm <- paste0(i, " - ", var)
-    factor_tables[[nm]] <- one_table
+    # nm <- paste0(i, " - ", var)
+    factor_tables[[var]] <- one_table
   }
 
   factor_tables

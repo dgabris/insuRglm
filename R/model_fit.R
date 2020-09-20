@@ -83,8 +83,9 @@ model_fit <- function(setup) {
   train_predictions <- predict(glm, newdata = train, type = "response")
   # test_predictions <- if(test_exists) predict(glm, newdata = test, type = "response") else NULL
   test_predictions <- NULL
-  factor_tables <- factor_tables(setup, betas, train_predictions)
-  relativities <- relativities(factor_tables, betas)
+  current_baseline <- adjust_baseline(betas, data_attrs[predictors])
+  factor_tables <- factor_tables(setup, betas, current_baseline, train_predictions)
+  relativities <- relativities(factor_tables, current_baseline)
   leverage_plots <- leverage_plots(glm)
 
   setup$current_model <- structure(
@@ -97,6 +98,7 @@ model_fit <- function(setup) {
       betas = betas,
       beta_triangles = beta_triangles,
       model_stats = model_stats,
+      current_baseline = current_baseline,
       factor_tables = factor_tables,
       relativities = relativities,
       train_predictions = train_predictions,
