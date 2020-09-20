@@ -1,7 +1,9 @@
-compute_model_avg <- function(x, x_betas) {
+compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas = NULL) {
 
   intercept_row <- x_betas %>% dplyr::filter(factor == "(Intercept)")
   intercept_estimate <- intercept_row$estimate[[1]]
+
+  baseline_estimate <- current_baseline
 
   # when x_betas contains intercept only, variable is either NOT predictor, or an offset
   if(nrow(x_betas) == 1) {
@@ -14,8 +16,8 @@ compute_model_avg <- function(x, x_betas) {
       model_avg_df <- dplyr::bind_cols(
         orig_level = orig_levels,
         estimate = estimate,
-        model_avg_pred_nonrescaled = exp(intercept_estimate) * exp(estimate),
-        model_avg_lin_nonrescaled = intercept_estimate + estimate,
+        model_avg_pred_nonrescaled = exp(baseline_estimate) * exp(estimate),
+        model_avg_lin_nonrescaled = baseline_estimate + estimate,
         model_avg_pred_rescaled = exp(estimate),
         model_avg_lin_rescaled = estimate
       ) %>%
@@ -50,8 +52,8 @@ compute_model_avg <- function(x, x_betas) {
       dplyr::left_join(main_rows, by = c("actual_level")) %>%
       dplyr::mutate(estimate = dplyr::coalesce(estimate, 0)) %>%
       dplyr::mutate(
-        model_avg_pred_nonrescaled = exp(intercept_estimate) * exp(estimate),
-        model_avg_lin_nonrescaled = intercept_estimate + estimate,
+        model_avg_pred_nonrescaled = exp(baseline_estimate) * exp(estimate),
+        model_avg_lin_nonrescaled = baseline_estimate + estimate,
         model_avg_pred_rescaled = exp(estimate),
         model_avg_lin_rescaled = estimate
       ) %>%
@@ -91,7 +93,7 @@ compute_model_avg <- function(x, x_betas) {
     model_avg_df <- dplyr::bind_cols(
       orig_level = names(mapping),
       actual_level = unname(mapping),
-      intercept_estimate = rep(intercept_estimate, length(mapping))
+      baseline_estimate = rep(baseline_estimate, length(mapping))
     ) %>%
     dplyr::left_join(main_rows, by = c("actual_level")) %>%
     dplyr::rename(interaction_estimate = estimate) %>%
@@ -105,9 +107,9 @@ compute_model_avg <- function(x, x_betas) {
     dplyr::mutate(main2_estimate = coalesce(main2_estimate, 0)) %>%
     dplyr::mutate(
       model_avg_pred_nonrescaled =
-        exp(intercept_estimate) * exp(main1_estimate) * exp(main2_estimate) * exp(interaction_estimate),
+        exp(baseline_estimate) * exp(main1_estimate) * exp(main2_estimate) * exp(interaction_estimate),
       model_avg_lin_nonrescaled =
-        intercept_estimate + main1_estimate + main2_estimate + interaction_estimate,
+        baseline_estimate + main1_estimate + main2_estimate + interaction_estimate,
       model_avg_pred_rescaled =
         exp(main1_estimate) * exp(main2_estimate) * exp(interaction_estimate),
       model_avg_lin_rescaled =
@@ -122,12 +124,44 @@ compute_model_avg <- function(x, x_betas) {
     dplyr::left_join(main_rows, by = c("orig_level" = "actual_level")) %>%
     dplyr::mutate(estimate = dplyr::coalesce(estimate, 0)) %>%
     dplyr::mutate(
-      model_avg_pred_nonrescaled = exp(intercept_estimate) * exp(estimate),
-      model_avg_lin_nonrescaled = intercept_estimate + estimate,
+      model_avg_pred_nonrescaled = exp(baseline_estimate) * exp(estimate),
+      model_avg_lin_nonrescaled = baseline_estimate + estimate,
       model_avg_pred_rescaled = exp(estimate),
       model_avg_lin_rescaled = estimate
     ) %>%
     dplyr::select(-estimate)
+  }
+
+  if(!is.null(by)) {
+    x_model_avg <- model_avg_df %>%
+      select(orig_level, model_avg_lin_nonrescaled_x = model_avg_lin_nonrescaled) %>%
+      mutate(orig_level = as.character(orig_level))
+
+    by_model_avg <- compute_model_avg(by, by_betas, current_baseline) %>%
+      select(orig_level, model_avg_lin_nonrescaled_by = model_avg_lin_nonrescaled)
+
+    model_avg_df <- tidyr::crossing(orig_level = x_model_avg$orig_level, by = by_model_avg$orig_level) %>%
+      dplyr::left_join(x_model_avg, by = "orig_level") %>%
+      dplyr::left_join(by_model_avg, by = c("by" = "orig_level")) %>%
+      dplyr::mutate(
+        model_avg_lin_nonrescaled = model_avg_lin_nonrescaled_x + model_avg_lin_nonrescaled_by - intercept_estimate,
+        model_avg_pred_nonrescaled = exp(model_avg_lin_nonrescaled)
+      ) %>%
+      dplyr::mutate(base_lvl_idx = (by == attr(.env$by, "base_level"))) %>%
+      dplyr::group_by(orig_level) %>%
+      dplyr::mutate(
+        model_avg_lin_rescaled = model_avg_lin_nonrescaled - model_avg_lin_nonrescaled[base_lvl_idx],
+        model_avg_pred_rescaled = model_avg_pred_nonrescaled / model_avg_pred_nonrescaled[base_lvl_idx]
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(
+        orig_level,
+        by,
+        model_avg_pred_nonrescaled,
+        model_avg_lin_nonrescaled,
+        model_avg_pred_rescaled,
+        model_avg_lin_rescaled
+      )
   }
 
   model_avg_df %>%
