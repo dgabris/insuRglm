@@ -1,10 +1,6 @@
-relativities <- function(factor_tables, betas) {
+relativities <- function(factor_tables, current_baseline) {
 
-  base_value <- betas %>%
-    dplyr::filter(factor == "(Intercept)") %>%
-    dplyr::mutate(estimate = exp(estimate)) %>%
-    dplyr::select(estimate) %>%
-    unlist(use.names = FALSE)
+  base_value <- exp(current_baseline)
 
   base_value_list <- list(`0 - base_value` = base_value)
 
