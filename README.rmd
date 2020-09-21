@@ -8,7 +8,7 @@ output: github_document
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.height = 3,
+  fig.height = 3.5,
   fig.path = "man/figures/README-"
 )
 ```
@@ -63,7 +63,7 @@ library(insuRglm)
 library(magrittr) # for the %>%
 
 setup <- setup(
-  data_train = train,
+  data_train = sev_train,
   target = 'sev',
   weight = 'numclaims',
   family = 'gamma',

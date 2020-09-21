@@ -67,7 +67,7 @@ beta_triangles <- function(betas, glm, predictor_attrs) {
         tidyr::spread(key = b, value = std_error_pct) %>%
         dplyr::mutate(!!base_lvl_sym := filtered_betas$std_error_pct) %>%
         tibble::add_row(a = base_lvl, .before = 1) %>%
-        dplyr::select(a, !!base_lvl_sym, everything()) %>%
+        dplyr::select(a, !!base_lvl_sym, dplyr::everything()) %>%
         dplyr::rename(!!predictor_sym := a)
 
       n_row <- nrow(combinations_df)

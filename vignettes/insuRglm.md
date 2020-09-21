@@ -463,23 +463,25 @@ each predictor, we can do so by using setting `triangles = TRUE`.
 modeling %>% 
   model_betas(triangles = TRUE)
 #> $pol_yr
-#> # A tibble: 4 x 5
-#>   pol_yr `2000` `2001` `2002` `2004`
-#>   <chr>  <chr>  <chr>  <chr>  <chr> 
-#> 1 2000   ""     ""     ""     ""    
-#> 2 2001   647%   ""     ""     ""    
-#> 3 2002   89%    78%    ""     ""    
-#> 4 2004   485%   278%   109%   ""    
+#> # A tibble: 5 x 6
+#>   pol_yr `2003` `2000` `2001` `2002` `2004`
+#>   <chr>  <chr>  <chr>  <chr>  <chr>  <chr> 
+#> 1 2003   ""     ""     ""     ""     ""    
+#> 2 2000   189%   ""     ""     ""     ""    
+#> 3 2001   146%   647%   ""     ""     ""    
+#> 4 2002   165%   89%    78%    ""     ""    
+#> 5 2004   313%   485%   278%   109%   ""    
 #> 
 #> $agecat
-#> # A tibble: 5 x 6
-#>   agecat `1`   `2`   `3`   `5`   `6`  
-#>   <chr>  <chr> <chr> <chr> <chr> <chr>
-#> 1 1      ""    ""    ""    ""    ""   
-#> 2 2      33%   ""    ""    ""    ""   
-#> 3 3      25%   93%   ""    ""    ""   
-#> 4 5      24%   57%   115%  ""    ""   
-#> 5 6      28%   78%   190%  567%  ""
+#> # A tibble: 6 x 7
+#>   agecat `4`   `1`   `2`   `3`   `5`   `6`  
+#>   <chr>  <chr> <chr> <chr> <chr> <chr> <chr>
+#> 1 4      ""    ""    ""    ""    ""    ""   
+#> 2 1      24%   ""    ""    ""    ""    ""   
+#> 3 2      79%   33%   ""    ""    ""    ""   
+#> 4 3      541%  25%   93%   ""    ""    ""   
+#> 5 5      139%  24%   57%   115%  ""    ""   
+#> 6 6      249%  28%   78%   190%  567%  ""
 ```
 
 ## Lift charts
@@ -506,7 +508,7 @@ modeling %>%
   model_lift(model = 'current') # can be also 'all'
 ```
 
-![](../man/figures/insuRglm_vignette-unnamed-chunk-28-1.png)<!-- -->
+![](../man/figures/insuRglm_vignette-unnamed-chunk-28-1.png)<!-- -->![](../man/figures/insuRglm_vignette-unnamed-chunk-28-2.png)<!-- -->
 
 ``` r
 
@@ -514,7 +516,7 @@ modeling %>%
   model_lift(model = 'current', buckets = 5) 
 ```
 
-![](../man/figures/insuRglm_vignette-unnamed-chunk-28-2.png)<!-- -->
+![](../man/figures/insuRglm_vignette-unnamed-chunk-28-3.png)<!-- -->
 
 ## Crossvalidation
 

@@ -68,7 +68,7 @@ library(insuRglm)
 library(magrittr) # for the %>%
 
 setup <- setup(
-  data_train = train,
+  data_train = sev_train,
   target = 'sev',
   weight = 'numclaims',
   family = 'gamma',
@@ -78,8 +78,8 @@ setup <- setup(
 #> [1] ""
 #> [1] "Train Data:"
 #> [1] "Number of Observations: 3699"
-#> [1] "Weighted Average Target: 1873.08"
-#> [1] "Max. Target: 47296.61"
+#> [1] "Weighted Average Target: 1865.06"
+#> [1] "Max. Target: 46868.18"
 #> [1] "Min. Target: 200"
 #> [1] ""
 ```
@@ -102,22 +102,22 @@ setup %>%
 #> # A tibble: 5 x 4
 #>   pol_yr weight_sum target_sum target_avg
 #>   <fct>       <int>      <dbl>      <dbl>
-#> 1 2000          809   1481902.      1922.
-#> 2 2001          775   1236633.      1699.
-#> 3 2002          814   1467416.      1886.
-#> 4 2003          765   1340400.      1866.
-#> 5 2004          807   1502716.      1985.
+#> 1 2000          791   1451350.      1925.
+#> 2 2001          785   1493467.      1971.
+#> 3 2002          785   1266940.      1728.
+#> 4 2003          821   1421615.      1831.
+#> 5 2004          779   1392400.      1871.
 #> 
 #> $agecat
 #> # A tibble: 6 x 4
 #>   agecat weight_sum target_sum target_avg
 #>   <fct>       <int>      <dbl>      <dbl>
-#> 1 1             424    962220.      2408.
-#> 2 2             810   1546308.      2023.
-#> 3 3             963   1621376.      1778.
-#> 4 4             956   1654774.      1837.
-#> 5 5             507    797327.      1638.
-#> 6 6             310    447061.      1540.
+#> 1 1             423   1078124.      2661.
+#> 2 2             804   1474176.      1934.
+#> 3 3             944   1574173.      1763.
+#> 4 4             975   1613592.      1747.
+#> 5 5             512    804438.      1631.
+#> 6 6             303    481270.      1667.
 ```
 
 Add or remove predictors to model formula with `factor_add` and

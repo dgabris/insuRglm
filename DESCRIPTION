@@ -11,6 +11,7 @@ Encoding: UTF-8
 LazyData: true
 Imports:
   ggplot2 (>= 3.1.0),
+  patchwork (>= 1.0.0),
   dplyr (>= 0.7.8),
   tibble (>= 1.4.2),
   tidyr (>= 0.8.2),
@@ -23,7 +24,7 @@ Imports:
   tweedie (>= 2.3.2),
   openxlsx (>= 4.1.0),
   Hmisc (>= 4.3)
-RoxygenNote: 7.0.1
+RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,

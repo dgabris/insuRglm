@@ -82,6 +82,7 @@ explore_data <- function(setup, type = c("visual", "tabular"), factors = NULL, b
       lapply(function(x) {
         x %>%
           dplyr::select(-target_sum) %>%
+          dplyr::rename(`Obs. Avg.` = target_avg) %>%
           dplyr::mutate(geom_text_label = "") %>%
           oneway_plot(colors = c("#CC79A7"))
       })
