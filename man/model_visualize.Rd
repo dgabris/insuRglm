@@ -6,7 +6,8 @@
 \usage{
 model_visualize(
   setup,
-  factors = c("fitted", "unfitted", "all"),
+  factors = "fitted",
+  by = NULL,
   y_axis = c("predicted", "linear"),
   rescaled = FALSE
 )
@@ -14,7 +15,11 @@ model_visualize(
 \arguments{
 \item{setup}{Setup object. Created at the start of the workflow. Usually piped in from previous step.}
 
-\item{factors}{Character scalar. One of \code{fitted}, \code{unfitted} or \code{all}.}
+\item{factors}{Character scalar/vector. Either one of \code{fitted}, \code{unfitted}, \code{all} or
+a name of one or multiple currently fitted model predictors.}
+
+\item{by}{Character scalar. A name of one of currently fitted predictors in the model.
+Will result in two-way chart showing the combination of the main effects (without interaction).}
 
 \item{y_axis}{Character scalar. Either \code{predicted} or \code{linear}.}
 
@@ -54,5 +59,17 @@ modeling \%>\%
 modeling \%>\%
   model_visualize(factors = 'unfitted')
 
+modeling \%>\%
+  model_visualize(factors = c('pol_yr', 'agecat'))
+
+modeling <- modeling \%>\%
+  factor_add(gender) \%>\%
+  model_fit()
+
+modeling \%>\%
+  model_visualize(factors = 'fitted', by = 'gender')
+
+modeling \%>\%
+  model_visualize(factors = 'agecat', by = 'gender', y_axis = 'linear')
 
 }
