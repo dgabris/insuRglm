@@ -1,8 +1,5 @@
 compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas = NULL) {
 
-  intercept_row <- x_betas %>% dplyr::filter(factor == "(Intercept)")
-  intercept_estimate <- intercept_row$estimate[[1]]
-
   baseline_estimate <- current_baseline
 
   # when x_betas contains intercept only, variable is either NOT predictor, or an offset
@@ -63,15 +60,28 @@ compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas 
 
     estimates <- main_rows$estimate
     mapping_df <- attr(x, "mapping")
+    base_level <- attr(x, "base_level")
+
+    baseline_x_vals <- mapping_df %>%
+      dplyr::filter(as.character(orig_level) == base_level) %>%
+      dplyr::select(dplyr::contains("orthogonal_degree_"))
+
+    stopifnot(nrow(baseline_x_vals) == 1)
+    baseline_x_vals <- unlist(baseline_x_vals, use.names = FALSE)
+
+    existing_adjustment <- sum(estimates * baseline_x_vals)
+
+    # baseline already includes adjustment from this variate, we need to remove it
+    this_baseline <- baseline_estimate - existing_adjustment
+
     orthogonal_x_vals <- mapping_df %>%
       dplyr::select(dplyr::contains("orthogonal_degree_"))
 
-    linear_nonrescaled <- rep(intercept_estimate, nrow(mapping_df))
+    linear_nonrescaled <- rep(this_baseline, nrow(mapping_df))
     for(i in seq_along(estimates)) {
       linear_nonrescaled <- linear_nonrescaled + (orthogonal_x_vals[[i]] * estimates[[i]])
     }
 
-    base_level <- attr(x, "base_level")
     base_level_ind <- which(as.character(mapping_df$orig_level) == base_level)
     base_level_val <- linear_nonrescaled[[base_level_ind]]
 
@@ -144,7 +154,7 @@ compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas 
       dplyr::left_join(x_model_avg, by = "orig_level") %>%
       dplyr::left_join(by_model_avg, by = c("by" = "orig_level")) %>%
       dplyr::mutate(
-        model_avg_lin_nonrescaled = model_avg_lin_nonrescaled_x + model_avg_lin_nonrescaled_by - intercept_estimate,
+        model_avg_lin_nonrescaled = model_avg_lin_nonrescaled_x + model_avg_lin_nonrescaled_by - baseline_estimate,
         model_avg_pred_nonrescaled = exp(model_avg_lin_nonrescaled)
       ) %>%
       dplyr::mutate(base_lvl_idx = (by == attr(.env$by, "base_level"))) %>%
