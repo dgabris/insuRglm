@@ -43,6 +43,7 @@ explore_data <- function(setup, type = c("visual", "tabular"), factors = NULL, b
   if(!is.null(by)) {
     if(!(is.character(by) && length(by))) stop("'by' must be a character scalar")
     if(!by %in% setup$simple_factors) stop("'by' is not present in the dataset provided to setup object")
+    factors <- setdiff(factors, by)
   }
 
   train <- setup$data_train

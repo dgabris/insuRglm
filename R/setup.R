@@ -238,7 +238,6 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     data_attrs[[var]] <- attributes(data_train[[var]])
   }
 
-
   current_model <- structure(
     list(
       target = target,
@@ -265,6 +264,10 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     ),
     class = "setup"
   )
+
+  # fit intercept only model
+  setup <- setup %>%
+    model_fit()
 
   print("Setup - OK")
   print("")

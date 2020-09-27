@@ -52,23 +52,28 @@ model_fit <- function(setup) {
   # test_exists <- !is.null(setup$data_test)
   # test <- if(test_exists) setup$data_test[vars] else NULL
 
-  offset_class <- vapply(train, function(x) inherits(x, "offset"), logical(1))
-  variate_class <- vapply(train, function(x) inherits(x, "variate"), logical(1))
-  variate_degrees <- vapply(train[variate_class], function(x) attr(x, "degree"), numeric(1))
+  if(is.null(predictors)) {
+    formula <- as.formula(paste0(target, " ~ 1"))
 
-  train <- remap_predictors(train, predictors, data_attrs)
-  # TODO
-  # think how test set should be treated
+  } else {
+    offset_class <- vapply(train, function(x) inherits(x, "offset"), logical(1))
+    variate_class <- vapply(train, function(x) inherits(x, "variate"), logical(1))
+    variate_degrees <- vapply(train[variate_class], function(x) attr(x, "degree"), numeric(1))
 
-  formula_lhs <- paste0(target, " ~ ")
-  formula_rhs <- prepare_formula_rhs(predictors, data_attrs, add_space = TRUE)
-  formula <- as.formula(paste0(formula_lhs, formula_rhs))
+    train <- remap_predictors(train, predictors, data_attrs)
+    # TODO
+    # think how test set should be treated
+
+    formula_lhs <- paste0(target, " ~ ")
+    formula_rhs <- prepare_formula_rhs(predictors, data_attrs, add_space = TRUE)
+    formula <- as.formula(paste0(formula_lhs, formula_rhs))
+
+    tw <- c(target, weight)
+    colnames(train) <- c(tw, paste0(setdiff(colnames(train), tw), " "))
+    # if(test_exists) colnames(test) <- c(tw, paste0(setdiff(colnames(test), tw), " "))
+  }
 
   family <- setup$family
-
-  tw <- c(target, weight)
-  colnames(train) <- c(tw, paste0(setdiff(colnames(train), tw), " "))
-  # if(test_exists) colnames(test) <- c(tw, paste0(setdiff(colnames(test), tw), " "))
 
   glm <- glm(
     formula = formula,
@@ -86,7 +91,7 @@ model_fit <- function(setup) {
   current_baseline <- adjust_baseline(betas, data_attrs[predictors])
   factor_tables <- factor_tables(setup, betas, current_baseline, train_predictions)
   relativities <- relativities(factor_tables, current_baseline)
-  leverage_plots <- leverage_plots(glm)
+  # leverage_plots <- leverage_plots(glm)
 
   setup$current_model <- structure(
     list(
@@ -103,8 +108,8 @@ model_fit <- function(setup) {
       relativities = relativities,
       train_predictions = train_predictions,
       test_predictions = test_predictions,
-      cv_predictions = NULL,
-      leverage_plots = leverage_plots
+      cv_predictions = NULL
+      # leverage_plots = leverage_plots
     ),
     class = "fitted_model"
   )
