@@ -66,5 +66,7 @@ factor_add <- function(setup, var_symbol) {
   if(new_var_char %in% predictors) message(paste0("Can't add '", new_var_char, "'. It's already among predictors."))
   setup$current_model$predictors <- unique(c(predictors, new_var_char))
 
+  class(setup$current_model) <- "unfitted_model"
+
   setup
 }

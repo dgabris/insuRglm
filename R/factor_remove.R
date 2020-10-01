@@ -37,5 +37,7 @@ factor_remove <- function(setup, var_symbol) {
 
     setup$current_model$predictors <- setdiff(predictors, remove_var)
 
+    class(setup$current_model) <- "unfitted_model"
+
     setup
 }

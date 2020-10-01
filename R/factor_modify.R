@@ -50,5 +50,8 @@ factor_modify <- function(setup, ...) {
       dplyr::mutate(!!!dots)
   }
 
+  # TODO, update, in case we allow creating new factors, rather than modifying existing (e.g. for interaction)
+  class(setup$current_model) <- "unfitted_model"
+
   setup
 }
