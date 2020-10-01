@@ -265,9 +265,10 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     class = "setup"
   )
 
-  # fit intercept only model
+  # fit and save intercept only model
   setup <- setup %>%
-    model_fit()
+    model_fit() %>%
+    model_save("intercept_model")
 
   print("Setup - OK")
   print("")

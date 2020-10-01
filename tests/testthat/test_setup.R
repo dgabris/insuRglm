@@ -837,7 +837,7 @@ test_that("setup produces what it should", {
     keep_cols = c('pol_nbr', 'exposure', 'premium')
   )
 
-  # no_print(setup <- do.call(setup, args))
+  # setup <- do.call(insuRglm::setup, args)
   # dput(setup)
   #
   # Copy & paste from console, hightlight the copied code
@@ -1382,9 +1382,9 @@ test_that("setup produces what it should", {
               std_error = 0.452668332567591,
               std_error_pct = "6%"
             ),
-            class = c("tbl_df", "tbl",
-                      "data.frame"),
-            row.names = c(NA,-1L)
+            row.names = c(NA,-1L),
+            class = c("tbl_df",
+                      "tbl", "data.frame")
           ),
           beta_triangles = list(),
           model_stats = structure(
@@ -2016,10 +2016,806 @@ test_that("setup produces what it should", {
           cv_predictions = NULL
         ),
         class = "fitted_model"
-      )
+      ),
+      ref_models = list(intercept_model = structure(
+        list(
+          target = "sev",
+          weight = "numclaims",
+          family = structure(
+            list(
+              family = "Gamma",
+              link = "log",
+              linkfun = function (mu)
+                log(mu),
+              linkinv = function (eta)
+                pmax(exp(eta), .Machine$double.eps),
+              variance = function (mu)
+                mu ^
+                2,
+              dev.resids = function (y, mu, wt)
+                -
+                2 * wt * (log(ifelse(y == 0, 1, y / mu)) - (y - mu) / mu),
+              aic = function (y, n, mu, wt, dev)
+              {
+                n <- sum(wt)
+                disp <-
+                  dev / n
+                -
+                  2 * sum(dgamma(y, 1 / disp, scale = mu * disp,
+                                 log = TRUE) * wt) + 2
+              },
+              mu.eta = function (eta)
+                pmax(exp(eta), .Machine$double.eps),
+              initialize = expression({
+                if (any(y <= 0))
+                  stop("non-positive values not allowed for the 'gamma' family")
+                n <-
+                  rep.int(1, nobs)
+                mustart <-
+                  y
+              }),
+              validmu = function (mu)
+                all(is.finite(mu)) &&
+                all(mu > 0),
+              valideta = function (eta)
+                TRUE,
+              simulate = function (object, nsim)
+              {
+                wts <- object$prior.weights
+                if (any(wts != 1))
+                  message("using weights as shape parameters")
+                ftd <-
+                  fitted(object)
+                shape <-
+                  MASS::gamma.shape(object)$alpha * wts
+                rgamma(nsim * length(ftd), shape = shape, rate = shape /
+                         ftd)
+              }
+            ),
+            class = "family"
+          ),
+          predictors = NULL,
+          data_attrs = list(
+            pol_yr = list(
+              levels = c("2000", "2001", "2002",
+                         "2003", "2004"),
+              class = c("simple_factor", "factor"),
+              orig_levels = c("2000", "2001", "2002", "2003",
+                              "2004"),
+              base_level = "2003"
+            ),
+            gender = list(
+              levels = c("F",
+                         "M"),
+              class = c("simple_factor", "factor"),
+              orig_levels = c("F",
+                              "M"),
+              base_level = "F"
+            ),
+            agecat = list(
+              levels = c("1",
+                         "2", "3", "4", "5", "6"),
+              class = c("simple_factor",
+                        "factor"),
+              orig_levels = c("1", "2", "3", "4", "5",
+                              "6"),
+              base_level = "3"
+            ),
+            area = list(
+              levels = c("A",
+                         "B", "C", "D", "E", "F"),
+              class = c("simple_factor",
+                        "factor"),
+              orig_levels = c("A", "B", "C", "D", "E",
+                              "F"),
+              base_level = "A"
+            ),
+            veh_body = list(
+              levels = c(
+                "BUS",
+                "CONVT",
+                "COUPE",
+                "HBACK",
+                "HDTOP",
+                "MCARA",
+                "MIBUS",
+                "PANVN",
+                "RDSTR",
+                "SEDAN",
+                "STNWG",
+                "TRUCK",
+                "UTE"
+              ),
+              class = c("simple_factor", "factor"),
+              orig_levels = c(
+                "BUS",
+                "CONVT",
+                "COUPE",
+                "HBACK",
+                "HDTOP",
+                "MCARA",
+                "MIBUS",
+                "PANVN",
+                "RDSTR",
+                "SEDAN",
+                "STNWG",
+                "TRUCK",
+                "UTE"
+              ),
+              base_level = "SEDAN"
+            ),
+            veh_age = list(
+              levels = c("1",
+                         "2", "3", "4"),
+              class = c("simple_factor", "factor"),
+              orig_levels = c("1", "2", "3", "4"),
+              base_level = "1"
+            ),
+            veh_value = list(
+              levels = c(
+                "[0,0.9]",
+                "(0.9,1.32]",
+                "(1.32,1.71]",
+                "(1.71,2.44]",
+                "(2.44,34.6]"
+              ),
+              class = c("simple_factor",
+                        "factor"),
+              orig_levels = c(
+                "[0,0.9]",
+                "(0.9,1.32]",
+                "(1.32,1.71]",
+                "(1.71,2.44]",
+                "(2.44,34.6]"
+              ),
+              base_level = "(2.44,34.6]"
+            )
+          ),
+          betas = structure(
+            list(
+              factor = "(Intercept)",
+              actual_level = "(Intercept)",
+              estimate = 7.07373007830543,
+              std_error = 0.452668332567591,
+              std_error_pct = "6%"
+            ),
+            row.names = c(NA,-1L),
+            class = c("tbl_df",
+                      "tbl", "data.frame")
+          ),
+          beta_triangles = list(),
+          model_stats = structure(
+            list(
+              null.deviance = 26.5654539001954,
+              df.null = 14L,
+              logLik = -128.735038997948,
+              AIC = 261.470077995896,
+              BIC = 262.8861783981,
+              deviance = 26.5654539001954,
+              df.residual = 14L,
+              dispersion = 3.27853790895238
+            ),
+            row.names = c(NA,-1L),
+            class = c("tbl_df", "tbl", "data.frame")
+          ),
+          current_baseline = 7.07373007830543,
+          factor_tables = list(
+            pol_yr = structure(
+              list(
+                factor = c("pol_yr",
+                           "pol_yr", "pol_yr", "pol_yr", "pol_yr"),
+                orig_level = c("2000",
+                               "2001", "2002", "2003", "2004"),
+                actual_level = c("2000",
+                                 "2001", "2002", "2003", "2004"),
+                weight = c(2L, 1L, 3L,
+                           7L, 3L),
+                obs_avg_pred_nonrescaled = c(
+                  4060.14999939,
+                  210.35000229,
+                  261.106666563333,
+                  1154.31142513429,
+                  564.84787877
+                ),
+                obs_avg_lin_nonrescaled = c(
+                  8.30897519757587,
+                  5.34877282092315,
+                  5.56492900798477,
+                  7.05125927646176,
+                  6.3365564537795
+                ),
+                obs_avg_pred_rescaled = c(
+                  3.51737833567546,
+                  0.182229853841678,
+                  0.226201232074748,
+                  1,
+                  0.489337510199458
+                ),
+                obs_avg_lin_rescaled = c(
+                  1.25771592111411,-1.70248645553861,
+                  -1.48633026847699,
+                  0,
+                  -0.71470282268226
+                ),
+                fitted_avg_pred_nonrescaled = c(
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708
+                ),
+                fitted_avg_lin_nonrescaled = c(
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543
+                ),
+                fitted_avg_pred_rescaled = c(1,
+                                             1, 1, 1, 1),
+                fitted_avg_lin_rescaled = c(0, 0, 0,
+                                            0, 0),
+                model_avg_pred_nonrescaled = c(NA_real_, NA_real_,
+                                               NA_real_, NA_real_, NA_real_),
+                model_avg_lin_nonrescaled = c(NA_real_,
+                                              NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_pred_rescaled = c(NA_real_,
+                                            NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_lin_rescaled = c(NA_real_,
+                                           NA_real_, NA_real_, NA_real_, NA_real_),
+                geom_text_label = c("",
+                                    "", "", "", "")
+              ),
+              row.names = c(NA,-5L),
+              class = c("tbl_df",
+                        "tbl", "data.frame")
+            ),
+            gender = structure(
+              list(
+                factor = c("gender",
+                           "gender"),
+                orig_level = c("F", "M"),
+                actual_level = c("F",
+                                 "M"),
+                weight = c(11L, 5L),
+                obs_avg_pred_nonrescaled = c(283.357272928182,
+                                             3154.35272216),
+                obs_avg_lin_nonrescaled = c(5.64670854993465,
+                                            8.05653859454848),
+                obs_avg_pred_rescaled = c(1, 11.1320690291916),
+                obs_avg_lin_rescaled = c(0, 2.40983004461384),
+                fitted_avg_pred_nonrescaled = c(1180.54335085708,
+                                                1180.54335085708),
+                fitted_avg_lin_nonrescaled = c(7.07373007830543,
+                                               7.07373007830543),
+                fitted_avg_pred_rescaled = c(1, 1),
+                fitted_avg_lin_rescaled = c(0, 0),
+                model_avg_pred_nonrescaled = c(NA_real_,
+                                               NA_real_),
+                model_avg_lin_nonrescaled = c(NA_real_,
+                                              NA_real_),
+                model_avg_pred_rescaled = c(NA_real_,
+                                            NA_real_),
+                model_avg_lin_rescaled = c(NA_real_, NA_real_),
+                geom_text_label = c("", "")
+              ),
+              row.names = c(NA,-2L),
+              class = c("tbl_df", "tbl", "data.frame")
+            ),
+            agecat = structure(
+              list(
+                factor = c("agecat", "agecat", "agecat", "agecat",
+                           "agecat", "agecat"),
+                orig_level = c("1", "2", "3",
+                               "4", "5", "6"),
+                actual_level = c("1", "2", "3", "4",
+                                 "5", "6"),
+                weight = c(2L, 4L, 5L, 3L, 1L, 1L),
+                obs_avg_pred_nonrescaled = c(
+                  2401.90498899,
+                  687.6949995725,
+                  269.488000392,
+                  3050.96454493333,
+                  353.76999998,
+                  480
+                ),
+                obs_avg_lin_nonrescaled = c(
+                  7.78401744689924,
+                  6.53334542506553,
+                  5.59652386391064,
+                  8.02321306384722,
+                  5.86864698440522,
+                  6.17378610390194
+                ),
+                obs_avg_pred_rescaled = c(
+                  8.91284578718223,
+                  2.55185759132938,
+                  1,
+                  11.3213372784516,
+                  1.31274861762083,
+                  1.78115537352976
+                ),
+                obs_avg_lin_rescaled = c(
+                  2.1874935829886,
+                  0.936821561154892,
+                  0,
+                  2.42668919993658,
+                  0.272123120494585,
+                  0.577262239991296
+                ),
+                fitted_avg_pred_nonrescaled = c(
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708
+                ),
+                fitted_avg_lin_nonrescaled = c(
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543
+                ),
+                fitted_avg_pred_rescaled = c(1,
+                                             1, 1, 1, 1, 1),
+                fitted_avg_lin_rescaled = c(0, 0,
+                                            0, 0, 0, 0),
+                model_avg_pred_nonrescaled = c(NA_real_,
+                                               NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_lin_nonrescaled = c(NA_real_, NA_real_,
+                                              NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_pred_rescaled = c(NA_real_,
+                                            NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_lin_rescaled = c(NA_real_, NA_real_, NA_real_,
+                                           NA_real_, NA_real_, NA_real_),
+                geom_text_label = c("",
+                                    "", "", "", "", "")
+              ),
+              row.names = c(NA,-6L),
+              class = c("tbl_df",
+                        "tbl", "data.frame")
+            ),
+            area = structure(
+              list(
+                factor = c("area",
+                           "area", "area", "area", "area", "area"),
+                orig_level = c("A",
+                               "B", "C", "D", "E", "F"),
+                actual_level = c("A", "B",
+                                 "C", "D", "E", "F"),
+                weight = c(6L, 2L, 6L, 1L, 1L, NA),
+                obs_avg_pred_nonrescaled = c(1154.54393560833, 1121.29999899,
+                                             1506.47166689667, 480, 200, NA),
+                obs_avg_lin_nonrescaled = c(
+                  7.05146068403262,
+                  7.02224400456609,
+                  7.31752555115597,
+                  6.17378610390194,
+                  5.29831736654804,
+                  NA
+                ),
+                obs_avg_pred_rescaled = c(
+                  1,
+                  0.971206001267663,
+                  1.30481969584198,
+                  0.415748578461058,
+                  0.173228574358774,
+                  NA
+                ),
+                obs_avg_lin_rescaled = c(
+                  0,
+                  -0.0292166794665221,
+                  0.266064867123355,
+                  -0.87767458013068,
+                  -1.75314331748458,
+                  NA
+                ),
+                fitted_avg_pred_nonrescaled = c(
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  NA
+                ),
+                fitted_avg_lin_nonrescaled = c(
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  NA
+                ),
+                fitted_avg_pred_rescaled = c(1,
+                                             1, 1, 1, 1, NA),
+                fitted_avg_lin_rescaled = c(0, 0, 0,
+                                            0, 0, NA),
+                model_avg_pred_nonrescaled = c(NA_real_, NA_real_,
+                                               NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_lin_nonrescaled = c(NA_real_,
+                                              NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_pred_rescaled = c(NA_real_,
+                                            NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_lin_rescaled = c(NA_real_,
+                                           NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
+                geom_text_label = c("",
+                                    "", "", "", "", "")
+              ),
+              row.names = c(NA,-6L),
+              class = c("tbl_df",
+                        "tbl", "data.frame")
+            ),
+            veh_body = structure(
+              list(
+                factor = c(
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body",
+                  "veh_body"
+                ),
+                orig_level = c(
+                  "BUS",
+                  "CONVT",
+                  "COUPE",
+                  "HBACK",
+                  "HDTOP",
+                  "MCARA",
+                  "MIBUS",
+                  "PANVN",
+                  "RDSTR",
+                  "SEDAN",
+                  "STNWG",
+                  "TRUCK",
+                  "UTE"
+                ),
+                actual_level = c(
+                  "BUS",
+                  "CONVT",
+                  "COUPE",
+                  "HBACK",
+                  "HDTOP",
+                  "MCARA",
+                  "MIBUS",
+                  "PANVN",
+                  "RDSTR",
+                  "SEDAN",
+                  "STNWG",
+                  "TRUCK",
+                  "UTE"
+                ),
+                weight = c(NA, NA, NA, 5L, NA, NA, NA, NA, NA, 7L,
+                           4L, NA, NA),
+                obs_avg_pred_nonrescaled = c(
+                  NA,
+                  NA,
+                  NA,
+                  2596.137995814,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  418.33051947,
+                  744.9224994125,
+                  NA,
+                  NA
+                ),
+                obs_avg_lin_nonrescaled = c(
+                  NA,
+                  NA,
+                  NA,
+                  7.86178023350441,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  6.03627183650862,
+                  6.61328018533408,
+                  NA,
+                  NA
+                ),
+                obs_avg_pred_rescaled = c(
+                  NA,
+                  NA,
+                  NA,
+                  6.20594930320444,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  1,
+                  1.78070321131787,
+                  NA,
+                  NA
+                ),
+                obs_avg_lin_rescaled = c(
+                  NA,
+                  NA,
+                  NA,
+                  1.82550839699579,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  0,
+                  0.577008348825463,
+                  NA,
+                  NA
+                ),
+                fitted_avg_pred_nonrescaled = c(
+                  NA,
+                  NA,
+                  NA,
+                  1180.54335085708,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  1180.54335085708,
+                  1180.54335085708,
+                  NA,
+                  NA
+                ),
+                fitted_avg_lin_nonrescaled = c(
+                  NA,
+                  NA,
+                  NA,
+                  7.07373007830543,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  NA,
+                  7.07373007830543,
+                  7.07373007830543,
+                  NA,
+                  NA
+                ),
+                fitted_avg_pred_rescaled = c(NA,
+                                             NA, NA, 1, NA, NA, NA, NA, NA, 1, 1, NA, NA),
+                fitted_avg_lin_rescaled = c(NA,
+                                            NA, NA, 0, NA, NA, NA, NA, NA, 0, 0, NA, NA),
+                model_avg_pred_nonrescaled = c(
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_
+                ),
+                model_avg_lin_nonrescaled = c(
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_
+                ),
+                model_avg_pred_rescaled = c(
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_
+                ),
+                model_avg_lin_rescaled = c(
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_,
+                  NA_real_
+                ),
+                geom_text_label = c("", "",
+                                    "", "", "", "", "", "", "", "", "", "", "")
+              ),
+              row.names = c(NA,-13L),
+              class = c("tbl_df", "tbl", "data.frame")
+            ),
+            veh_age = structure(
+              list(
+                factor = c("veh_age", "veh_age", "veh_age", "veh_age"),
+                orig_level = c("1", "2", "3", "4"),
+                actual_level = c("1",
+                                 "2", "3", "4"),
+                weight = c(6L, 6L, 3L, 1L),
+                obs_avg_pred_nonrescaled = c(1560.73666684167,
+                                             446.203939275, 1652.73999277, 1888.829998),
+                obs_avg_lin_nonrescaled = c(
+                  7.35291321111611,
+                  6.10077611045565,
+                  7.41018979129897,
+                  7.54371286768669
+                ),
+                obs_avg_pred_rescaled = c(1, 0.285893161066015,
+                                          1.05894865410865, 1.21021696877428),
+                obs_avg_lin_rescaled = c(0,-1.25213710066045, 0.0572765801828661, 0.190799656570587),
+                fitted_avg_pred_nonrescaled = c(
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708
+                ),
+                fitted_avg_lin_nonrescaled = c(
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543
+                ),
+                fitted_avg_pred_rescaled = c(1, 1, 1, 1),
+                fitted_avg_lin_rescaled = c(0,
+                                            0, 0, 0),
+                model_avg_pred_nonrescaled = c(NA_real_,
+                                               NA_real_, NA_real_, NA_real_),
+                model_avg_lin_nonrescaled = c(NA_real_,
+                                              NA_real_, NA_real_, NA_real_),
+                model_avg_pred_rescaled = c(NA_real_,
+                                            NA_real_, NA_real_, NA_real_),
+                model_avg_lin_rescaled = c(NA_real_,
+                                           NA_real_, NA_real_, NA_real_),
+                geom_text_label = c("",
+                                    "", "", "")
+              ),
+              row.names = c(NA,-4L),
+              class = c("tbl_df",
+                        "tbl", "data.frame")
+            ),
+            veh_value = structure(
+              list(
+                factor = c(
+                  "veh_value",
+                  "veh_value",
+                  "veh_value",
+                  "veh_value",
+                  "veh_value"
+                ),
+                orig_level = c(
+                  "[0,0.9]",
+                  "(0.9,1.32]",
+                  "(1.32,1.71]",
+                  "(1.71,2.44]",
+                  "(2.44,34.6]"
+                ),
+                actual_level = c(
+                  "[0,0.9]",
+                  "(0.9,1.32]",
+                  "(1.32,1.71]",
+                  "(1.71,2.44]",
+                  "(2.44,34.6]"
+                ),
+                weight = c(1L, 4L, 2L, 4L, 5L),
+                obs_avg_pred_nonrescaled = c(
+                  4450.039978,
+                  687.6949995725,
+                  3988.440000545,
+                  485.033408995,
+                  354.17199993
+                ),
+                obs_avg_lin_nonrescaled = c(
+                  8.40066835894016,
+                  6.53334542506553,
+                  8.29115545612534,
+                  6.18421777309083,
+                  5.86978267064296
+                ),
+                obs_avg_pred_rescaled = c(
+                  12.5646295553559,
+                  1.94169781831545,
+                  11.2613080687725,
+                  1.36948547341649,
+                  1
+                ),
+                obs_avg_lin_rescaled = c(
+                  2.53088568829719,
+                  0.663562754422568,
+                  2.42137278548237,
+                  0.314435102447862,
+                  0
+                ),
+                fitted_avg_pred_nonrescaled = c(
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708,
+                  1180.54335085708
+                ),
+                fitted_avg_lin_nonrescaled = c(
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543,
+                  7.07373007830543
+                ),
+                fitted_avg_pred_rescaled = c(1,
+                                             1, 1, 1, 1),
+                fitted_avg_lin_rescaled = c(0, 0, 0,
+                                            0, 0),
+                model_avg_pred_nonrescaled = c(NA_real_, NA_real_,
+                                               NA_real_, NA_real_, NA_real_),
+                model_avg_lin_nonrescaled = c(NA_real_,
+                                              NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_pred_rescaled = c(NA_real_,
+                                            NA_real_, NA_real_, NA_real_, NA_real_),
+                model_avg_lin_rescaled = c(NA_real_,
+                                           NA_real_, NA_real_, NA_real_, NA_real_),
+                geom_text_label = c("",
+                                    "", "", "", "")
+              ),
+              row.names = c(NA,-5L),
+              class = c("tbl_df",
+                        "tbl", "data.frame")
+            )
+          ),
+          relativities = list(`0 - base_value` = 1180.54335085708),
+          train_predictions = c(
+            `1` = 1180.54335085708,
+            `2` = 1180.54335085708,
+            `3` = 1180.54335085708,
+            `4` = 1180.54335085708,
+            `5` = 1180.54335085708,
+            `6` = 1180.54335085708,
+            `7` = 1180.54335085708,
+            `8` = 1180.54335085708,
+            `9` = 1180.54335085708,
+            `10` = 1180.54335085708,
+            `11` = 1180.54335085708,
+            `12` = 1180.54335085708,
+            `13` = 1180.54335085708,
+            `14` = 1180.54335085708,
+            `15` = 1180.54335085708
+          ),
+          test_predictions = NULL,
+          cv_predictions = NULL
+        ),
+        class = "fitted_model"
+      ))
     ),
-    class = c("modeling",
-              "setup")
+    class = c("modeling", "setup")
   )
 
   no_print(setup <- do.call(setup, args))
