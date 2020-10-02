@@ -15,7 +15,9 @@ Setup object with updated attributes.
 \description{
 Fits the model with the current model formula. Computes and saves back many new attributes and objects.
 This is a required step before using \code{model_visualize}, \code{model_compare}, \code{model_save},
-\code{model_betas}, \code{model_crossval}, \code{model_lift}, \code{model_export} and others
+\code{model_betas}, \code{model_crossval}, \code{model_lift}, \code{model_export} and others.
+In case of a big dataset (especially many columns), declaring \code{future::plan(multiprocess)} beforehand
+might help to speed up the process.
 }
 \examples{
 require(dplyr) # for the pipe operator
@@ -28,6 +30,9 @@ setup <- setup(
   family = 'gamma',
   keep_cols = c('pol_nbr', 'exposure', 'premium')
 )
+
+# parallel processing is supported and may be faster on bigger datasets
+plan(multiprocess)
 
 modeling <- setup \%>\%
   factor_add(pol_yr) \%>\%

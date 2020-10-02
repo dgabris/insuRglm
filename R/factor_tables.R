@@ -10,11 +10,9 @@ factor_tables <- function(setup, betas, current_baseline, predictions) {
   predictors <- setup$current_model$predictors
 
   vars <- c(predictors, setdiff(simple_factors, predictors))
-  factor_tables <- list()
+  vars <- setNames(vars, vars)
 
-  for(i in seq_along(vars)) {
-
-    var <- vars[[i]]
+  factor_tables <- furrr::future_map(vars, function(var) {
     x <- train[[var]]
 
     if(inherits(x, "custom_factor") || inherits(x, "interaction") ||
@@ -46,17 +44,14 @@ factor_tables <- function(setup, betas, current_baseline, predictions) {
 
     model_avg <- compute_model_avg(x, x_betas, current_baseline)
 
-    one_table <- dplyr::bind_cols(
+    dplyr::bind_cols(
       factor = rep(var, length(mapping)),
       orig_level = names(mapping),
       actual_level = unname(mapping)) %>%
-    dplyr::left_join(obs_avg, by = c("orig_level")) %>%
-    dplyr::left_join(fitted_avg, by = c("orig_level")) %>%
-    dplyr::left_join(model_avg, by = c("orig_level"))
-
-    # nm <- paste0(i, " - ", var)
-    factor_tables[[var]] <- one_table
-  }
+      dplyr::left_join(obs_avg, by = c("orig_level")) %>%
+      dplyr::left_join(fitted_avg, by = c("orig_level")) %>%
+      dplyr::left_join(model_avg, by = c("orig_level"))
+  })
 
   factor_tables
 

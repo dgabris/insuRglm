@@ -19,6 +19,7 @@ Setup object with updated attributes.
 }
 \description{
 Train the current (last) and any saved insuRglm model using CV data. Predictions are stored for later use.
+Uses parallel processing when \code{future::plan(multiprocess} is declared beforehand.
 }
 \examples{
 require(dplyr) # for the pipe operator
@@ -43,7 +44,16 @@ modeling_cv <- modeling \%>\%
 modeling_cv \%>\%
   model_lift(data = 'crossval')
 
+# let's do more folds and use parallel processing for that
+plan(multiprocess)
+
+modeling_cv <- modeling \%>\%
+  model_crossval(cv_folds = 100)
+
+modeling_cv \%>\%
+  model_lift(data = 'crossval')
+
 }
 \seealso{
-\code{\link{model_save}}, \code{\link{model_lift}}, \code{\link{model_performance}}
+\code{\link{model_save}}, \code{\link{model_lift}}, \code{\link{model_compare}}
 }
