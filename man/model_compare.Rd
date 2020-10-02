@@ -4,20 +4,17 @@
 \alias{model_compare}
 \title{Compare two or more insuRglm models}
 \usage{
-model_compare(setup, with, type = c("1", "2", "3"))
+model_compare(setup, type = c("rmse", "nested_model_test"), buckets = 10)
 }
 \arguments{
 \item{setup}{Setup object. Created at the start of the workflow. Usually piped in from previous step.}
 
-\item{with}{Character vector. Names of models that should be compared against the current model.}
-
-\item{type}{Character scalar. One of '1', '2' or '3'.
-'1' will produce visual comparison of observed values versus fitted values of each comparison model.
-'2' will produce visual comparison of predictions at base levels of each comparison model.
-'3' will produce nested model test in form of matrix of standard error percentages.}
+\item{type}{Character scalar. One of 'nested_model_test' or 'rmse'.
+'nested_model_test' will produce nested model test in form of matrix of standard error percentages.
+'rmse' will produce a plot comparing RMSE across all models (also separately for train and CV if \code{model_crossval} was used)}
 }
 \value{
-Either list of ggplot2 charts (types '1', '2') or matrix-like dataframe of nested model test results (type '3').
+Either a matrix-like dataframe of nested model test results or a ggplot2 chart.
 }
 \description{
 Compares multiple insuRglm models with the current (last) model. The comparison models must be saved using \code{model_save}.
@@ -44,19 +41,22 @@ modeling <- setup \%>\%
   factor_modify(agecat = variate(agecat, type = 'non_prop', mapping = c(1, 2, 3, 4, 5, 6))) \%>\%
   model_fit()
 
-# compare observed versus fitted
-modeling \%>\%
-  model_compare(with = 'model2', type = '1')
-
-# compare predictions at base levels
-modeling \%>\%
-  model_compare(with = 'model2', type = '2')
-
 # nested model test of model with and without the agecat
 modeling \%>\%
-  model_compare(with = 'model1', type = '3')
+  model_compare(type = 'nested_model_test')
+
+# compare training RMSE on all models so far
+modeling \%>\%
+  model_compare(type = 'rmse')
+
+# compare both training and CV RMSE on all models
+modeling_with_cv <- modeling \%>\%
+  model_crossval(cv_folds = 10, stratified = TRUE)
+
+modeling_with_cv \%>\%
+  model_compare(type = 'rmse')
 
 }
 \seealso{
-\code{\link{model_save}}
+\code{\link{model_save}}, \code{\link{model_crossval}}
 }

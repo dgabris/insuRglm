@@ -65,7 +65,7 @@ nested_model_test <- function(model_list) {
 
       }
 
-      test_results[[i]] <- paste0("Pr(>", test, ") = ", p_value)
+      test_results[[i]] <- paste0("Pr(>", test, ") = ", round(p_value, 5))
 
     }
 

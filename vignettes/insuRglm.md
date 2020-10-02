@@ -375,13 +375,14 @@ setup %>%
 #> 5 (2.44,34.6]        895   1554247.      1822.
 ```
 
-## Save and compare
+## Save and compare (visually)
 
 After simplifying a model predictor, it might be useful to visualize
 changes. We can compare the current (latest) model to a previous
-reference model using `model_compare`. We can use `model_save` at any
-point of the workflow, to save a reference model. Note, that each model
-has to be fit using `model_fit` before saving.
+reference model by using `model_visualize` with `ref_models` parameters.
+We can use `model_save` at any point of the workflow, to save a
+reference model. Note, that each model has to be fit using `model_fit`
+before saving.
 
 ``` r
 modeling <- setup %>%
@@ -393,22 +394,22 @@ modeling <- setup %>%
   model_fit()
 ```
 
-We can use type 1 comparison to compare actual values against the fitted
-values of the comparison models.
+We can compare actual values against the fitted values of the comparison
+models by using this code.
 
 ``` r
 modeling %>%
-  model_compare(with = 'model1', type = '1')
+  model_visualize(ref_models = 'model1')
 ```
 
 ![](../man/figures/insuRglm_vignette-unnamed-chunk-23-1.png)<!-- -->![](../man/figures/insuRglm_vignette-unnamed-chunk-23-2.png)<!-- -->
 
-In addition, type 2 comparison will compare the predictions at base
-levels of the comparison models
+If we wish to compare model predictions at base levels, we can do so by
+changing the `y_axis` to `linear`
 
 ``` r
 modeling %>%
-  model_compare(with = 'model1', type = '2')
+  model_visualize(y_axis = "linear", ref_models = 'model1')
 ```
 
 ![](../man/figures/insuRglm_vignette-unnamed-chunk-24-1.png)<!-- -->![](../man/figures/insuRglm_vignette-unnamed-chunk-24-2.png)<!-- -->
@@ -467,21 +468,21 @@ modeling %>%
 #>   pol_yr `2003` `2000` `2001` `2002` `2004`
 #>   <chr>  <chr>  <chr>  <chr>  <chr>  <chr> 
 #> 1 2003   ""     ""     ""     ""     ""    
-#> 2 2000   189%   ""     ""     ""     ""    
-#> 3 2001   146%   647%   ""     ""     ""    
-#> 4 2002   165%   89%    78%    ""     ""    
-#> 5 2004   313%   485%   278%   109%   ""    
+#> 2 2000   "189%" ""     ""     ""     ""    
+#> 3 2001   "146%" "647%" ""     ""     ""    
+#> 4 2002   "165%" "89%"  "78%"  ""     ""    
+#> 5 2004   "313%" "485%" "278%" "109%" ""    
 #> 
 #> $agecat
 #> # A tibble: 6 x 7
-#>   agecat `4`   `1`   `2`   `3`   `5`   `6`  
-#>   <chr>  <chr> <chr> <chr> <chr> <chr> <chr>
-#> 1 4      ""    ""    ""    ""    ""    ""   
-#> 2 1      24%   ""    ""    ""    ""    ""   
-#> 3 2      79%   33%   ""    ""    ""    ""   
-#> 4 3      541%  25%   93%   ""    ""    ""   
-#> 5 5      139%  24%   57%   115%  ""    ""   
-#> 6 6      249%  28%   78%   190%  567%  ""
+#>   agecat `4`    `1`   `2`   `3`    `5`    `6`  
+#>   <chr>  <chr>  <chr> <chr> <chr>  <chr>  <chr>
+#> 1 4      ""     ""    ""    ""     ""     ""   
+#> 2 1      "24%"  ""    ""    ""     ""     ""   
+#> 3 2      "79%"  "33%" ""    ""     ""     ""   
+#> 4 3      "541%" "25%" "93%" ""     ""     ""   
+#> 5 5      "139%" "24%" "57%" "115%" ""     ""   
+#> 6 6      "249%" "28%" "78%" "190%" "567%" ""
 ```
 
 ## Lift charts
@@ -508,7 +509,7 @@ modeling %>%
   model_lift(model = 'current') # can be also 'all'
 ```
 
-![](../man/figures/insuRglm_vignette-unnamed-chunk-28-1.png)<!-- -->![](../man/figures/insuRglm_vignette-unnamed-chunk-28-2.png)<!-- -->
+![](../man/figures/insuRglm_vignette-unnamed-chunk-28-1.png)<!-- -->
 
 ``` r
 
@@ -516,7 +517,7 @@ modeling %>%
   model_lift(model = 'current', buckets = 5) 
 ```
 
-![](../man/figures/insuRglm_vignette-unnamed-chunk-28-3.png)<!-- -->
+![](../man/figures/insuRglm_vignette-unnamed-chunk-28-2.png)<!-- -->
 
 ## Crossvalidation
 
@@ -549,29 +550,47 @@ modeling_cv %>%
 
 ![](../man/figures/insuRglm_vignette-unnamed-chunk-30-2.png)<!-- -->
 
-## Model performance
+## Model comparison
 
-We can use `model_performance` to compare the performance of multiple
-models present within the workflow. Each value on the plot represents a
-summarized performance metric for the corresponding model. Optionally,
-data can be grouped using `buckets` argument, before the mtric is
-computed. The plot then actually displays a comparison of multiple lift
-charts.
+We can use `model_compare` to compare the performance (or significance)
+of multiple models present within the workflow.
 
-``` r
-modeling_cv %>%
-  model_performance(data = 'crossval', buckets = 10)
-```
-
-![](../man/figures/insuRglm_vignette-unnamed-chunk-31-1.png)<!-- -->
+If we want to do a nested model significance test, we can do so by
+specifying `type = 'nested_model_test'`. Note that here we don’t really
+need crossvalidated predictions.
 
 ``` r
-  
-modeling_cv %>%
-  model_performance(data = 'crossval', buckets = 5)
+modeling_cv %>% 
+  model_compare(type = 'nested_model_test')
+#> # A tibble: 4 x 5
+#>   model           intercept_model    model1             model2             current_model
+#>   <chr>           <chr>              <chr>              <chr>              <chr>        
+#> 1 intercept_model ""                 ""                 ""                 ""           
+#> 2 model1          "Pr(>F) = 0.00074" ""                 ""                 ""           
+#> 3 model2          "Pr(>F) = 0.00177" "Pr(>F) = 0.33055" ""                 ""           
+#> 4 current_model   "Pr(>F) = 0.00355" "Pr(>F) = 0.40076" "Pr(>F) = 0.43922" ""
 ```
 
-![](../man/figures/insuRglm_vignette-unnamed-chunk-31-2.png)<!-- -->
+We can also look at the RMSE metric across all the models. If we have
+crossvalidated predictions available, the crossvalidation performance
+will also appear. By default, the predictions are ordered and grouped
+into 10 buckets (like for lift chart). We can change this behaviour by
+using `buckets` argument.
+
+``` r
+modeling_cv %>% 
+  model_compare(type = 'rmse')
+```
+
+![](../man/figures/insuRglm_vignette-unnamed-chunk-32-1.png)<!-- -->
+
+``` r
+
+modeling_cv %>% 
+  model_compare(type = 'rmse', buckets = 20)
+```
+
+![](../man/figures/insuRglm_vignette-unnamed-chunk-32-2.png)<!-- -->
 
 ## Model export
 

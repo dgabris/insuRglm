@@ -196,8 +196,8 @@ setup %>%
   explore_data(type = 'tabular', factors = 'veh_value')
 ```
 
-## Save and compare
-After simplifying a model predictor, it might be useful to visualize changes. We can compare the current (latest) model to a previous reference model using `model_compare`. We can use `model_save` at any point of the workflow, to save a reference model. Note, that each model has to be fit using `model_fit` before saving.
+## Save and compare (visually)
+After simplifying a model predictor, it might be useful to visualize changes. We can compare the current (latest) model to a previous reference model by using `model_visualize` with `ref_models` parameters. We can use `model_save` at any point of the workflow, to save a reference model. Note, that each model has to be fit using `model_fit` before saving.
 
 ```{r}
 modeling <- setup %>%
@@ -209,18 +209,18 @@ modeling <- setup %>%
   model_fit()
 ```
 
-We can use type 1 comparison to compare actual values against the fitted values of the comparison models.
+We can compare actual values against the fitted values of the comparison models by using this code.
 
 ```{r, results = FALSE}
 modeling %>%
-  model_compare(with = 'model1', type = '1')
+  model_visualize(ref_models = 'model1')
 ```
 
-In addition, type 2 comparison will compare the predictions at base levels of the comparison models
+If we wish to compare model predictions at base levels, we can do so by changing the `y_axis` to `linear`
 
 ```{r, results = FALSE}
 modeling %>%
-  model_compare(with = 'model1', type = '2')
+  model_visualize(y_axis = "linear", ref_models = 'model1')
 ```
 
 ## Model revert
@@ -292,15 +292,24 @@ modeling_cv %>%
   model_lift(data = 'crossval', model = 'current', buckets = 5)
 ```
 
-## Model performance
-We can use `model_performance` to compare the performance of multiple models present within the workflow. Each value on the plot represents a summarized performance metric for the corresponding model. Optionally, data can be grouped using `buckets` argument, before the mtric is computed. The plot then actually displays a comparison of multiple lift charts.
+## Model comparison
+We can use `model_compare` to compare the performance (or significance) of multiple models present within the workflow. 
+
+If we want to do a nested model significance test, we can do so by specifying `type = 'nested_model_test'`. Note that here we don't really need crossvalidated predictions.
 
 ```{r}
-modeling_cv %>%
-  model_performance(data = 'crossval', buckets = 10)
-  
-modeling_cv %>%
-  model_performance(data = 'crossval', buckets = 5)
+modeling_cv %>% 
+  model_compare(type = 'nested_model_test')
+```
+
+We can also look at the RMSE metric across all the models. If we have crossvalidated predictions available, the crossvalidation performance will also appear. By default, the predictions are ordered and grouped into 10 buckets (like for lift chart). We can change this behaviour by using `buckets` argument.
+
+```{r}
+modeling_cv %>% 
+  model_compare(type = 'rmse')
+
+modeling_cv %>% 
+  model_compare(type = 'rmse', buckets = 20)
 ```
 
 ## Model export

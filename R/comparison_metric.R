@@ -1,4 +1,4 @@
-selection_metric <- function(df, metric = c("rmse")) {
+comparison_metric <- function(df, metric = c("rmse")) {
   stopifnot(inherits(df, "data.frame"))
   stopifnot(all(c("actual", "expected", "weight") %in% colnames(df)))
   metric <- match.arg(metric)

@@ -10,6 +10,7 @@
 #' Will result in two-way chart showing the combination of the main effects (without interaction).
 #' @param y_axis Character scalar. Either \code{predicted} or \code{linear}.
 #' @param rescaled Boolean scalar. Whether the y-axis is rescaled compared to the base level predictor at each chart.
+#' @param ref_models Character vector. Names of one or multiple reference models created by using \code{model_save}
 #'
 #' @return List of ggplot2 charts.
 #' @export
@@ -55,8 +56,20 @@
 #' modeling %>%
 #'   model_visualize(factors = 'agecat', by = 'gender', y_axis = 'linear')
 #'
+#' modeling <- modeling %>%
+#'   model_save('model1') %>%
+#'   factor_modify(agecat = variate(agecat, type = 'non_prop', mapping = 1:6, degree = 2)) %>%
+#'   model_fit()
+#'
+#' modeling %>%
+#'   model_visualize(ref_models = "model1")
+#'
+#' modeling %>%
+#'   model_visualize(y_axis = "linear", ref_models = "model1")
+#'
 
-model_visualize <- function(setup, factors = "fitted", by = NULL, y_axis = c("predicted", "linear"), rescaled = FALSE) {
+model_visualize <- function(setup, factors = "fitted", by = NULL, y_axis = c("predicted", "linear"), rescaled = FALSE,
+                            ref_models = NULL) {
 
   if(!inherits(setup, 'setup')) stop('Setup object is not correct')
   if(!inherits(setup, 'modeling')) stop("No model is fitted. Please run 'model_fit' first")
@@ -71,6 +84,10 @@ model_visualize <- function(setup, factors = "fitted", by = NULL, y_axis = c("pr
 
   model <- setup$current_model
   predictors <- model$predictors
+
+  if(inherits(model, "unfitted_model")) {
+    message("Visualization won't reflect recent changes! Please run 'model_fit()' first.")
+  }
 
   if(y_axis == "predicted" && rescaled) {
     pattern <- "_pred_rescaled"
@@ -89,14 +106,14 @@ model_visualize <- function(setup, factors = "fitted", by = NULL, y_axis = c("pr
   if(!is.null(by)) {
     if(!by %in% predictors) stop("'by' must be a name of one of currently fitted model predictors.")
 
-    if(factors %in% c("unfitted", "all")) {
-      message("Two-way charts will be created only for fitted factors.")
-      factors <- setdiff(predictors, by)
-    } else if(factors == "fitted") {
-      factors <- setdiff(predictors, by)
-    }
-
-    if(any(!factors %in% predictors)) {
+    if(length(factors) == 1) {
+      if(factors %in% c("unfitted", "all")) {
+        message("Two-way charts will be created only for fitted factors.")
+        factors <- setdiff(predictors, by)
+      } else if(factors == "fitted") {
+        factors <- setdiff(predictors, by)
+      }
+    } else if(any(!factors %in% predictors)) {
       message("Two-way charts will be created only for fitted factors.")
       factors <- intersect(factors, predictors)
       if(length(factors) == 0) stop("'factors' doesn't contain any fitted factors, no visualization can be produced.")
@@ -157,18 +174,116 @@ model_visualize <- function(setup, factors = "fitted", by = NULL, y_axis = c("pr
     return(plot_list)
   }
 
-  relativities <- model$relativities
+  if(!is.null(ref_models)) {
+    if(!(is.character(ref_models))) stop("'ref_models' must be of type character")
+    if(any(!ref_models %in% names(setup$ref_models))) stop("One of the model names is invalid")
 
-  if(length(predictors) != length(relativities) - 1) {
-    message("Visualization won't reflect recent changes! Please run 'model_fit()' first.")
+    model_list <- setup$ref_models[ref_models]
+    model_list$current_model <- model
+
+    intersect_fitted <- model_list %>%
+      lapply(function(x) x$predictors) %>%
+      purrr::reduce(base::intersect)
+
+    intersect_unfitted <- model_list %>%
+      lapply(function(x) setdiff(names(x$factor_tables), x$predictors)) %>%
+      purrr::reduce(base::intersect)
+
+    if(length(factors) == 1) {
+      if(factors == "fitted") {
+        factors <- intersect_fitted
+      } else if(factors == "unfitted") {
+        if(y_axis == "predicted") factors <- intersect_unfitted
+        if(y_axis == "linear") {
+          factors <- intersect_fitted
+          message("When using `ref_models` and `y_axis = 'linear'`, only fitted factors are plotted.")
+        }
+      } else if(factors == "all") {
+        if(y_axis == "predicted") factors <- c(intersect_fitted, intersect_unfitted)
+        if(y_axis == "linear") {
+          factors <- intersect_fitted
+          message("When using `ref_models` and `y_axis = 'linear'`, only fitted factors are plotted.")
+        }
+      }
+    } else {
+      factors <- base::intersect(factors, c(intersect_fitted, intersect_unfitted))
+    }
+
+    plot_list <- list()
+    for(i in seq_along(factors)) {
+
+      predictor <- factors[[i]]
+      predictor_sym <- rlang::sym(predictor)
+
+      base_df <- model_list$current_model$factor_tables[[predictor]] %>%
+        dplyr::select(!!predictor_sym := orig_level, weight_sum = weight, dplyr::contains(pattern)) %>%
+        dplyr::select(-dplyr::starts_with("model_avg"), -dplyr::starts_with("fitted_avg")) %>%
+        setNames(stringr::str_replace(names(.), pattern, "")) %>%
+        dplyr::rename(`Observed Average` = obs_avg)
+
+      orig_order <- base_df[[predictor]]
+
+      for(model_nm in names(model_list)) {
+
+        model_nm_fitted_sym <- rlang::sym(paste0(model_nm, "_fitted_avg"))
+        model_nm_model_sym <- rlang::sym(paste0(model_nm, "_model_avg"))
+
+        join_df <- model_list[[model_nm]]$factor_tables[[predictor]] %>%
+          dplyr::select(!!predictor_sym := orig_level, dplyr::contains(pattern))
+
+        if(y_axis == "predicted") {
+          join_df <- join_df %>%
+            dplyr::select(-dplyr::starts_with("obs_avg"), -dplyr::starts_with("model_avg"))
+        }
+
+        if(y_axis == "linear") {
+          join_df <- join_df %>%
+            dplyr::select(-dplyr::starts_with("obs_avg"), -dplyr::starts_with("fitted_avg"))
+        }
+
+        col_nms <- names(join_df) %>%
+          stringr::str_replace(pattern, "") %>%
+          stringr::str_replace("fitted_avg", "Fitted Average") %>%
+          stringr::str_replace("model_avg", "Model Parameters")
+
+        names(join_df) <- c(col_nms[[1]], paste0(col_nms[-1], " (", model_nm, ")"))
+
+        base_df <- base_df %>%
+          dplyr::left_join(join_df, by = c(predictor))
+      }
+
+      if(y_axis == "predicted") {
+        colors <- setNames(
+          c("#CC79A7", my_colors()[seq_len(length(model_list) - 1)], "#33CC00"),
+          c("Observed Average", paste0("Fitted Average (", names(model_list), ")"))
+        )
+      } else if(y_axis == "linear") {
+        base_df <- base_df %>%
+          dplyr::select(-`Observed Average`)
+
+        colors <- setNames(
+          c(my_colors()[seq_len(length(model_list) - 1)], "#99FF00"),
+          paste0("Model Parameters (", names(model_list), ")")
+        )
+      }
+
+      plot_list[[predictor]] <- base_df %>%
+        dplyr::mutate(!!predictor_sym := factor(!!predictor_sym, levels = orig_order)) %>%
+        dplyr::mutate(geom_text_label = "") %>%
+        oneway_plot(label_prefix = label_prefix, colors = colors)
+    }
+
+    return(plot_list)
   }
 
-  if(factors == "fitted") {
-    tables <- model$factor_tables[predictors]
-  } else if(factors == "unfitted") {
-    tables <- model$factor_tables[setdiff(setup$simple_factors, predictors)]
-  } else if(factors == "all") {
-    tables <- model$factor_tables
+  if(length(factors) == 1) {
+    if(factors == "fitted") {
+      tables <- model$factor_tables[predictors]
+    } else if(factors == "unfitted") {
+      tables <- model$factor_tables[setdiff(setup$simple_factors, predictors)]
+    } else if(factors == "all") {
+      tables <- model$factor_tables
+    }
   } else {
     tables <- model$factor_tables[factors]
   }

@@ -9,7 +9,8 @@ model_visualize(
   factors = "fitted",
   by = NULL,
   y_axis = c("predicted", "linear"),
-  rescaled = FALSE
+  rescaled = FALSE,
+  ref_models = NULL
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ Will result in two-way chart showing the combination of the main effects (withou
 \item{y_axis}{Character scalar. Either \code{predicted} or \code{linear}.}
 
 \item{rescaled}{Boolean scalar. Whether the y-axis is rescaled compared to the base level predictor at each chart.}
+
+\item{ref_models}{Character vector. Names of one or multiple reference models created by using \code{model_save}}
 }
 \value{
 List of ggplot2 charts.
@@ -71,5 +74,16 @@ modeling \%>\%
 
 modeling \%>\%
   model_visualize(factors = 'agecat', by = 'gender', y_axis = 'linear')
+
+modeling <- modeling \%>\%
+  model_save('model1') \%>\%
+  factor_modify(agecat = variate(agecat, type = 'non_prop', mapping = 1:6, degree = 2)) \%>\%
+  model_fit()
+
+modeling \%>\%
+  model_visualize(ref_models = "model1")
+
+modeling \%>\%
+  model_visualize(y_axis = "linear", ref_models = "model1")
 
 }
