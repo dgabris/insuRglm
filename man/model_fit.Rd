@@ -4,10 +4,14 @@
 \alias{model_fit}
 \title{Fit the insuRglm model}
 \usage{
-model_fit(setup)
+model_fit(setup, glm_backend = c("setup", "speedglm", "stats"))
 }
 \arguments{
 \item{setup}{Setup object. Created at the start of the workflow. Usually piped in from previous step.}
+
+\item{glm_backend}{Character scalar. Either 'setup', 'speedglm' or 'stats'. Choosing 'setup', which is a default
+choice results in using the \code{glm_backend} set during setup. Choosing 'speedglm' or 'stats' will temporarily
+override this by using \code{speedglm::speedglm} or \code{stats::glm}.}
 }
 \value{
 Setup object with updated attributes.

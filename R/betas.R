@@ -1,6 +1,7 @@
 betas <- function(predictors, broom_coefs) {
 
   broom_coefs <- broom_coefs %>%
+    dplyr::mutate(p.value = as.numeric(as.character(p.value))) %>%
     dplyr::mutate(term = stringr::str_replace_all(term, "`", "")) %>%
     dplyr::mutate(term = stringr::str_replace_all(term, c("poly\\(" = "", " , " = " ", " = [0-9]{1}\\)" = "")))
 

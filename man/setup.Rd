@@ -14,6 +14,10 @@ setup(
   tweedie_p = NULL,
   simple_factors = NULL,
   keep_cols = NULL,
+  glm_backend = c("speedglm", "stats"),
+  folder = getwd(),
+  load_file_nm = NULL,
+  save_file_nm = NULL,
   seed = NULL
 )
 }
@@ -34,7 +38,18 @@ setup(
 
 \item{keep_cols}{Character vector. Names of columns that are not potential predictors, but should be kept in data.}
 
-\item{seed}{Numeric scalar. Seed for random number generation. Currently doesn't have any effect.}
+\item{glm_backend}{Character scalar. Either 'speedglm' or 'stats'. Choosing 'speedglm' results in using
+\code{speedglm::speedglm} as glm backend, while choosing 'stats' will result in traditional \code{stats::glm}.}
+
+\item{folder}{Character scalar. Path to an existing folder where setup/model files will be stored.}
+
+\item{load_file_nm}{Character scalar. Filename of an existing setup object created by running setup.
+Must be within folder specified by \code{folder}. Can be without the '_setup.rds' suffix.}
+
+\item{save_file_nm}{Character scalar. Filename of a setup object saved during this run of the setup function.
+Will be saved within the folder specified by \code{folder},}
+
+\item{seed}{Numeric scalar. Seed for reproducible random number generation, e.g. for creating CV folds.}
 
 \item{offset.}{Character scalar. Name of the offset variable, applicable for \code{poisson} family}
 }

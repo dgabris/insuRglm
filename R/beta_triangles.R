@@ -1,6 +1,6 @@
 beta_triangles <- function(betas, glm, predictor_attrs) {
   stopifnot(inherits(betas, "data.frame"))
-  stopifnot(inherits(glm, "glm"))
+  stopifnot(inherits(glm, "glm") || inherits(glm, "speedglm"))
   stopifnot(inherits(predictor_attrs, "list"))
 
   vcov_estimate_matrix <- vcov(glm)

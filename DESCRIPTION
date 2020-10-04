@@ -10,6 +10,7 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports:
+  speedglm (>= 0.3-2),
   ggplot2 (>= 3.1.0),
   patchwork (>= 1.0.0),
   dplyr (>= 0.7.8),
@@ -24,7 +25,8 @@ Imports:
   statmod (>= 1.4.30),
   tweedie (>= 2.3.2),
   openxlsx (>= 4.1.0),
-  Hmisc (>= 4.3)
+  Hmisc (>= 4.3),
+  carrier (>= 0.1.0)
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,

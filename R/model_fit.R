@@ -7,6 +7,9 @@
 #' might help to speed up the process.
 #'
 #' @param setup Setup object. Created at the start of the workflow. Usually piped in from previous step.
+#' @param glm_backend Character scalar. Either 'setup', 'speedglm' or 'stats'. Choosing 'setup', which is a default
+#' choice results in using the \code{glm_backend} set during setup. Choosing 'speedglm' or 'stats' will temporarily
+#' override this by using \code{speedglm::speedglm} or \code{stats::glm}.
 #'
 #' @return Setup object with updated attributes.
 #' @export
@@ -38,8 +41,11 @@
 #'   model_visualize(factors = 'unfitted')
 #'
 
-model_fit <- function(setup) {
+model_fit <- function(setup, glm_backend = c("setup", "speedglm", "stats")) {
   if(!inherits(setup, 'setup')) stop('Setup object is not correct')
+
+  glm_backend <- match.arg(glm_backend)
+  glm_fun <- switch(glm_backend, setup = setup$glm_fun, stats = stats::glm, speedglm = speedglm::speedglm)
 
   if(inherits(setup, "offset_model")) {
     message("Note: Using test data and fitting intercept only.")
@@ -49,9 +55,10 @@ model_fit <- function(setup) {
 
   target <- setup$target
   weight <- setup$weight
+  offset <- setup$offset
   predictors <- setup$current_model$predictors
 
-  vars <- c(target, weight, predictors)
+  vars <- c(target, weight, offset, predictors)
   train <- setup$data_train[vars]
 
   # test_exists <- !is.null(setup$data_test)
@@ -80,17 +87,21 @@ model_fit <- function(setup) {
 
   family <- setup$family
 
-  glm <- glm(
-    formula = formula,
-    family = family,
-    weights = train[[weight]],
-    data = train
+  glm <- do.call(
+    glm_fun,
+    list(
+      formula = formula,
+      family = family,
+      weights = train[[weight]],
+      offset = if(!is.null(offset)) log(train[[offset]]) else NULL,
+      data = train
+    )
   )
 
   betas <- betas(predictors, broom::tidy(glm))
   beta_triangles <- beta_triangles(betas, glm, data_attrs[predictors])
-  model_stats <- dplyr::bind_cols(broom::glance(glm), dispersion = summary(glm)$dispersion)
-  train_predictions <- predict(glm, newdata = train, type = "response")
+  model_stats <- model_stats(glm)
+  train_predictions <- unname(predict(glm, newdata = train, type = "response"))
   # test_predictions <- if(test_exists) predict(glm, newdata = test, type = "response") else NULL
   test_predictions <- NULL
   current_baseline <- adjust_baseline(betas, data_attrs[predictors])
@@ -102,9 +113,11 @@ model_fit <- function(setup) {
     list(
       target = target,
       weight = weight,
+      offset = offset,
       family = family,
       predictors = predictors,
       data_attrs = data_attrs,
+      glm_fun = glm_fun,
       betas = betas,
       beta_triangles = beta_triangles,
       model_stats = model_stats,
@@ -122,6 +135,11 @@ model_fit <- function(setup) {
   if(!inherits(setup, "modeling")) {
     class(setup) <- c("modeling", class(setup))
   }
+
+  setup_copy <- setup
+  setup_copy$data_train <- NULL
+  setup_copy$data_test <- NULL
+  readr::write_rds(setup_copy, file.path(setup_copy$folder, paste0(setup_copy$base_nm, "_model.rds")))
 
   setup
 }

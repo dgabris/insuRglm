@@ -16,10 +16,11 @@ no_print <- function(expr) {
 freq_args <- list(
   data_train = freq_train,
   data_test = freq_test,
-  target = "freq",
-  offset = "exposure",
+  target = "numclaims",
+  weight = "exposure",
   family = "poisson",
-  keep_cols = c("pol_nbr", "premium")
+  keep_cols = c("pol_nbr", "premium"),
+  folder = tempdir()
 )
 
 sev_args <- list(
@@ -28,7 +29,8 @@ sev_args <- list(
   target = "sev",
   weight = "numclaims",
   family = "gamma",
-  keep_cols = c("pol_nbr", "exposure", "premium")
+  keep_cols = c("pol_nbr", "exposure", "premium"),
+  folder = tempdir()
 )
 
 bc_args <- list(
@@ -38,7 +40,8 @@ bc_args <- list(
   weight = "exposure",
   family = "tweedie",
   tweedie_p = 1.5,
-  keep_cols = c("pol_nbr", "exposure", "premium")
+  keep_cols = c("pol_nbr", "exposure", "premium"),
+  folder = tempdir()
 )
 
 no_print(freq_setup <- suppressMessages({do.call(setup, freq_args)}))

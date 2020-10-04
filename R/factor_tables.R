@@ -10,10 +10,13 @@ factor_tables <- function(setup, betas, current_baseline, predictions) {
   predictors <- setup$current_model$predictors
 
   vars <- c(predictors, setdiff(simple_factors, predictors))
-  vars <- setNames(vars, vars)
 
-  factor_tables <- furrr::future_map(vars, function(var) {
-    x <- train[[var]]
+  obs_avg_tables <- setup$obs_avg_tables[vars]
+
+  vars <- as.list(train[vars])
+
+  factor_tables <- furrr::future_map2(vars, obs_avg_tables, carrier::crate(function(x, obs_avg) {
+    var <- attr(x, "var_nm")
 
     if(inherits(x, "custom_factor") || inherits(x, "interaction") ||
        inherits(x, "offset")) {
@@ -21,14 +24,14 @@ factor_tables <- function(setup, betas, current_baseline, predictions) {
 
     } else if(inherits(x, "variate")) {
       mapping_df <- attr(x, "mapping")
-      mapping <- setNames(mapping_df$actual_level, mapping_df$orig_level)
+      mapping <- stats::setNames(mapping_df$actual_level, mapping_df$orig_level)
 
     } else {
       orig_levels <- attr(x, "orig_levels")
-      mapping <- setNames(orig_levels, orig_levels)
+      mapping <- stats::setNames(orig_levels, orig_levels)
     }
 
-    obs_avg <- compute_obs_avg(x, target_vector, weight_vector)
+    # obs_avg <- compute_obs_avg(x, target_vector, weight_vector)
     fitted_avg <- compute_fitted_avg(x, predictions, weight_vector)
 
     if(inherits(x, "interaction")) {
@@ -51,7 +54,18 @@ factor_tables <- function(setup, betas, current_baseline, predictions) {
       dplyr::left_join(obs_avg, by = c("orig_level")) %>%
       dplyr::left_join(fitted_avg, by = c("orig_level")) %>%
       dplyr::left_join(model_avg, by = c("orig_level"))
-  })
+  },
+  current_baseline = current_baseline,
+  betas = betas,
+  target_vector = target_vector,
+  weight_vector = weight_vector,
+  predictions = predictions,
+  compute_fitted_avg = compute_fitted_avg,
+  compute_model_avg = compute_model_avg,
+  `%>%` = `%>%`
+  ),
+  .options = furrr::future_options(globals = FALSE)
+  )
 
   factor_tables
 

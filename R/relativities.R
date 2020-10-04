@@ -2,7 +2,7 @@ relativities <- function(factor_tables, current_baseline) {
 
   base_value <- exp(current_baseline)
 
-  base_value_list <- list(`0 - base_value` = base_value)
+  base_value_list <- list(`base_value` = base_value)
 
   relativity_list <- Filter(factor_tables, f = function(x) {
     all(!is.na(x$model_avg_pred_rescaled))

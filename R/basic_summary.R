@@ -11,12 +11,16 @@ basic_summary <- function(setup) {
   max_train <- round(max(train[[target]]), 2)
   min_train <- round(min(train[[target]]), 2)
 
-  print("Train Data:")
-  print(paste0("Number of Observations: ", n_train))
-  print(paste0("Weighted Average Target: ", w_avg_train))
-  print(paste0("Max. Target: ", max_train))
-  print(paste0("Min. Target: ", min_train))
-  print("")
+  cat("Train Data:")
+  cat("\n")
+  cat(paste0("Number of Observations: ", n_train))
+  cat("\n")
+  cat(paste0("Weighted Average Target: ", w_avg_train))
+  cat("\n")
+  cat(paste0("Max. Target: ", max_train))
+  cat("\n")
+  cat(paste0("Min. Target: ", min_train))
+  cat("\n")
 
   if(!is.null(test)) {
     n_test <- nrow(test)
@@ -26,10 +30,15 @@ basic_summary <- function(setup) {
     max_test <- round(max(test[[target]]), 2)
     min_test <- round(min(test[[target]]), 2)
 
-    print("Test Data:")
-    print(paste0("Number of Observations: ", n_test))
-    print(paste0("Weighted Average Target: ", w_avg_test))
-    print(paste0("Max. Target: ", max_test))
-    print(paste0("Min. Target: ", min_test))
+    cat("Test Data:")
+    cat("\n")
+    cat(paste0("Number of Observations: ", n_test))
+    cat("\n")
+    cat(paste0("Weighted Average Target: ", w_avg_test))
+    cat("\n")
+    cat(paste0("Max. Target: ", max_test))
+    cat("\n")
+    cat(paste0("Min. Target: ", min_test))
+    cat("\n")
   }
 }

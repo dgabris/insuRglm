@@ -7,7 +7,8 @@ test_that("input datasets must be of class data.frame", {
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args), "'data_train' must be of class 'data.frame'")
@@ -29,7 +30,8 @@ test_that("input datasets must have consistent schema", {
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   err_msg <- paste0(
@@ -62,7 +64,8 @@ test_that("data_test can't contain extra values that are not in data_train", {
     weight = 'numclaims',
     family = 'gamma',
     keep_cols = c('pol_nbr', 'exposure', 'premium'),
-    tweedie_p = 1.5
+    tweedie_p = 1.5,
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args), "test_column has these values in test set, that are not present in train: d")
@@ -78,7 +81,8 @@ test_that("target argument must be a scalar", {
     target = c('sev', 'sev'),
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args, "'target' must be a character scalar"))
@@ -92,7 +96,8 @@ test_that("target variable must be present in the datasets", {
     target = 'imaginary_target',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args, "Target variable not in the dataset"))
@@ -109,13 +114,11 @@ test_that("setup works even without weight argument", {
     target = 'sev',
     # weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
-  expect_message(
-    no_print(setup <- do.call(setup, args)),
-    "'weight' was not provided, each record will have the same weight"
-  )
+  no_print(setup <- do.call(setup, args))
 
   expect_equal(setup$weight, "_weight")
   expect_equal(setup$data_train[[setup$weight]], rep(1, nrow(setup$data_train)))
@@ -129,7 +132,8 @@ test_that("weight argument must be a scalar", {
     target = 'sev',
     weight = c('numclaims', 'numclaims'),
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args, "'weight' must be a character scalar"))
@@ -143,7 +147,8 @@ test_that("weight variable must be present in the datasets", {
     target = 'sev',
     weight = 'imaginary_weight',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args, "Weight variable not in the dataset"))
@@ -157,10 +162,11 @@ test_that("offset argument must be a scalar", {
 
   args <- list(
     data_train = freq_train,
-    target = 'freq',
+    target = 'numclaims',
     offset = c('exposure', 'exposure'),
     family = 'poisson',
-    keep_cols = c('pol_nbr', 'premium')
+    keep_cols = c('pol_nbr', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args, "'offset' must be a character scalar"))
@@ -171,10 +177,11 @@ test_that("offset variable must be present in the datasets", {
 
   args <- list(
     data_train = freq_train,
-    target = 'freq',
+    target = 'numclaims',
     offset = 'imaginary_offset',
     family = 'poisson',
-    keep_cols = c('pol_nbr', 'premium')
+    keep_cols = c('pol_nbr', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args, "Offset variable not in the dataset"))
@@ -191,7 +198,8 @@ test_that("keep_cols argument must be a character vector", {
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = as.factor(c('pol_nbr', 'exposure', 'premium'))
+    keep_cols = as.factor(c('pol_nbr', 'exposure', 'premium')),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args), "'keep_cols' must be a character vector")
@@ -205,7 +213,8 @@ test_that("keep_cols variables must be present in the datasets", {
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'imaginary_column')
+    keep_cols = c('pol_nbr', 'exposure', 'imaginary_column'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args), "Some of the 'keep_cols' are not in the dataset")
@@ -222,7 +231,8 @@ test_that("setup works even without simple_factors argument", {
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   no_print(setup <- do.call(setup, args))
@@ -249,7 +259,8 @@ test_that("simple_factors must be a character vector", {
     weight = 'numclaims',
     family = 'gamma',
     simple_factors = as.factor(c("pol_yr", "agecat", "veh_age")),
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(
@@ -267,7 +278,8 @@ test_that("simple_factors variables must be present in the datasets", {
     weight = 'numclaims',
     family = 'gamma',
     simple_factors = c("pol_yr", "agecat", "imaginary_column"),
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args), "Some of the 'simple_factors' are not in the dataset")
@@ -287,10 +299,11 @@ test_that("non-factor simple_factors get coerced to factor class", {
     weight = 'numclaims',
     family = 'gamma',
     simple_factors = testing_factors,
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
-  expect_message(no_print(setup <- do.call(setup, args)), "All the predictors are now coerced to 'factor' class")
+  no_print(setup <- do.call(setup, args))
 
   actual_classes <- vapply(setup$data_train[testing_factors], class, character(2))
   correct_classes <- magrittr::set_colnames(rbind(rep("simple_factor", 3), rep("factor", 3)), testing_factors)
@@ -308,7 +321,8 @@ test_that("non-factor class simple_factors can't have more than 255 unique value
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   err_msg <- paste0(
@@ -331,7 +345,8 @@ test_that("factor class simple_factors can't have more than 255 unique values", 
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   err_msg <- paste0(
@@ -351,7 +366,8 @@ test_that("all simple_factors are of factor class after setup was run", {
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   no_print(setup1 <- do.call(setup, args))
@@ -389,7 +405,8 @@ test_that("simple_factors levels encompass all levels across train/test, even if
     weight = 'numclaims',
     family = 'gamma',
     keep_cols = c('pol_nbr', 'exposure', 'premium'),
-    tweedie_p = 1.5
+    tweedie_p = 1.5,
+    folder = tempdir()
   )
 
   no_print(setup <- do.call(setup, args))
@@ -404,12 +421,13 @@ context("Setup - Family")
 
 test_that("family must be one of poisson, gamma or tweedie", {
 
-  args <-   args <- list(
+  args <- list(
     data_train = sev_train,
     target = 'sev',
     weight = 'numclaims',
     family = 'gama',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args), "'arg' should be one of \"poisson\", \"gamma\", \"tweedie\"")
@@ -420,7 +438,7 @@ test_that("family must be one of poisson, gamma or tweedie", {
 #
 #   args <- list(
 #     data_train = freq_train,
-#     target = 'freq',
+#     target = 'numclaims',
 #     # offset = 'exposure',
 #     weight = 'exposure',
 #     family = 'poisson',
@@ -442,20 +460,22 @@ test_that("tweedie_p is ignored when family is poisson or gamma", {
 
   args <- list(
     data_train = freq_train,
-    target = 'freq',
-    offset = 'exposure',
+    target = 'numclaims',
+    weight = 'exposure',
     family = 'poisson',
     keep_cols = c('pol_nbr', 'premium'),
-    tweedie_p = 1.5
+    tweedie_p = 1.5,
+    folder = tempdir()
   )
 
-  args2 <-   args <- list(
+  args2 <- list(
     data_train = sev_train,
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
     keep_cols = c('pol_nbr', 'exposure', 'premium'),
-    tweedie_p = 1.5
+    tweedie_p = 1.5,
+    folder = tempdir()
   )
 
   expect_message(no_print(do.call(setup, args)), "family is 'poisson' or 'gamma', 'tweedie_p' will be ignored")
@@ -470,7 +490,8 @@ test_that("tweedie_p must be provided for family tweedie", {
     target = 'bc',
     weight = 'exposure',
     family = 'tweedie',
-    keep_cols = c('pol_nbr', 'premium')
+    keep_cols = c('pol_nbr', 'premium'),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args), "Please provide 'tweedie_p'")
@@ -485,7 +506,8 @@ test_that("tweedie_p must be a numeric scalar", {
     weight = 'exposure',
     family = 'tweedie',
     keep_cols = c('pol_nbr', 'premium'),
-    tweedie_p = c(1.5, 1.7)
+    tweedie_p = c(1.5, 1.7),
+    folder = tempdir()
   )
 
   expect_error(do.call(setup, args), "'tweedie_p' must be a numeric scalar")
@@ -503,7 +525,8 @@ test_that("tweedie_p must be in range (1, 2), boundaries excluded", {
     target = 'bc',
     weight = 'exposure',
     family = 'tweedie',
-    keep_cols = c('pol_nbr', 'premium')
+    keep_cols = c('pol_nbr', 'premium'),
+    folder = tempdir()
   )
 
   args1 <- c(
@@ -537,11 +560,12 @@ test_that("family is initialized correctly", {
 
   args1 <- list(
     data_train = freq_train,
-    target = 'freq',
-    offset = 'exposure',
+    target = 'numclaims',
+    weight = 'exposure',
     family = 'poisson',
     keep_cols = c('pol_nbr', 'premium'),
-    tweedie_p = 1.5
+    tweedie_p = 1.5,
+    folder = tempdir()
   )
 
   args2 <- list(
@@ -550,7 +574,8 @@ test_that("family is initialized correctly", {
     weight = 'numclaims',
     family = 'gamma',
     keep_cols = c('pol_nbr', 'exposure', 'premium'),
-    tweedie_p = 1.5
+    tweedie_p = 1.5,
+    folder = tempdir()
   )
 
   args3 <- list(
@@ -559,7 +584,8 @@ test_that("family is initialized correctly", {
     weight = 'exposure',
     family = 'tweedie',
     keep_cols = c('pol_nbr', 'premium'),
-    tweedie_p = 1.5
+    tweedie_p = 1.5,
+    folder = tempdir()
   )
 
   # no_print(setup1 <- do.call(setup, args1))
@@ -573,7 +599,171 @@ test_that("family is initialized correctly", {
 })
 
 
-context("Setup - working example")
+context("Setup - glm backend")
+
+test_that("Glm backend must be either `stats` or `speedglm`", {
+
+  args <- list(
+    data_train = sev_train,
+    target = 'sev',
+    weight = 'numclaims',
+    family = 'gamma',
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir(),
+    glm_backend = "whatever"
+  )
+
+  expect_error(no_print({do.call(setup, args)}), "'arg' should be one of \"speedglm\", \"stats\"")
+})
+
+test_that("Glm backend results in a correct `glm_fun`", {
+
+  args1 <- list(
+    data_train = sev_train,
+    target = 'sev',
+    weight = 'numclaims',
+    family = 'gamma',
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir(),
+    glm_backend = "speedglm"
+  )
+
+  args2 <- list(
+    data_train = sev_train,
+    target = 'sev',
+    weight = 'numclaims',
+    family = 'gamma',
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir(),
+    glm_backend = "stats"
+  )
+
+  no_print({setup1 <- do.call(setup, args1)})
+  no_print({setup2 <- do.call(setup, args2)})
+
+  expect_equal(setup1$glm_fun, speedglm::speedglm)
+  expect_equal(setup2$glm_fun, stats::glm)
+})
+
+test_that("Glm backends produce identical setup object", {
+
+  args1 <- list(
+    data_train = sev_train,
+    target = 'sev',
+    weight = 'numclaims',
+    family = 'gamma',
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir(),
+    glm_backend = "speedglm",
+    seed = 123
+  )
+
+  args2 <- list(
+    data_train = sev_train,
+    target = 'sev',
+    weight = 'numclaims',
+    family = 'gamma',
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir(),
+    glm_backend = "stats",
+    seed = 123
+  )
+
+  no_print({setup1 <- do.call(setup, args1)})
+  no_print({setup2 <- do.call(setup, args2)})
+
+  setup1$glm_fun <- NULL
+  setup1$current_model$glm_fun <- NULL
+  setup1$ref_models$intercept_model$glm_fun <- NULL
+  setup1$current_model$model_stats$BIC <- NA_real_
+  setup1$ref_models$intercept_model$model_stats$BIC <- NA_real_
+
+  setup2$glm_fun <- NULL
+  setup2$current_model$glm_fun <- NULL
+  setup2$ref_models$intercept_model$glm_fun <- NULL
+  setup2$current_model$model_stats$BIC <- NA_real_
+  setup2$ref_models$intercept_model$model_stats$BIC <- NA_real_
+
+  expect_equal(setup1, setup2, tolerance = 0.001)
+})
+
+
+context("Setup - folder, loading and saving objects")
+
+test_that("'folder' has to be existing folder", {
+
+  args <- list(
+    data_train = sev_train,
+    target = 'sev',
+    weight = 'numclaims',
+    family = 'gamma',
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = "whatever"
+  )
+
+  expect_error(no_print({setup <- do.call(setup, args)}), "folder 'whatever' doesn't exist.")
+})
+
+test_that("'load_file_nm' has to be existing file", {
+
+  args <- list(
+    data_train = sev_train,
+    target = 'sev',
+    weight = 'numclaims',
+    family = 'gamma',
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir(),
+    load_file_nm = "whatever"
+  )
+
+  expect_error(no_print({setup1 <- do.call(setup, args)}))
+})
+
+test_that("saving and loading setup objects works", {
+
+  args <- list(
+    data_train = sev_train,
+    target = 'sev',
+    weight = 'numclaims',
+    family = 'gamma',
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir(),
+    load_file_nm = NULL,
+    save_file_nm = "test"
+  )
+
+  no_print({setup1 <- do.call(setup, args)})
+
+  expected_result <- readr::read_rds(file.path(tempdir(), "test_setup.rds"))
+
+  args$load_file_nm <- "test"
+  args$save_file_nm <- NULL
+
+  no_print({setup2 <- do.call(setup, args)})
+
+  expect_equal(setup2, expected_result)
+})
+
+
+context("Setup - seed")
+
+test_that("seed must be numeric scalar", {
+
+  args <- list(
+    data_train = sev_train,
+    target = 'sev',
+    weight = 'numclaims',
+    family = 'gamma',
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = tempdir(),
+    seed = "whatever"
+  )
+
+  expect_error(no_print({setup <- do.call(setup, args)}), "'seed' must be numeric scalar.")
+})
+
+
+context("Setup - integration test")
 
 test_that("setup produces what it should", {
 
@@ -834,7 +1024,9 @@ test_that("setup produces what it should", {
     target = 'sev',
     weight = 'numclaims',
     family = 'gamma',
-    keep_cols = c('pol_nbr', 'exposure', 'premium')
+    keep_cols = c('pol_nbr', 'exposure', 'premium'),
+    folder = '~/insuRglm/tests',
+    seed = 123
   )
 
   # setup <- do.call(insuRglm::setup, args)
@@ -907,9 +1099,349 @@ test_that("setup produces what it should", {
         "veh_age",
         "veh_value"
       ),
-      seed = NULL,
+      glm_fun = function (formula,
+                          data,
+                          family = gaussian(),
+                          weights = NULL,
+                          start = NULL,
+                          etastart = NULL,
+                          mustart = NULL,
+                          offset = NULL,
+                          maxit = 25,
+                          k = 2,
+                          sparse = NULL,
+                          set.default = list(),
+                          trace = FALSE,
+                          method = c("eigen", "Cholesky", "qr"),
+                          model = FALSE,
+                          y = FALSE,
+                          fitted = FALSE,
+                          ...)
+      {
+        call <- match.call()
+        target <-
+          y
+        M <-
+          match.call(expand.dots = FALSE)
+        m <-
+          match(c("formula", "data", "subset"), names(M),
+                0L)
+        M <-
+          M[c(1L, m)]
+        M$drop.unused.levels <-
+          TRUE
+        M[[1L]] <-
+          quote(stats::model.frame)
+        M <-
+          eval(M, parent.frame())
+        y <-
+          M[[1]]
+        tf <-
+          attr(M, "terms")
+        X <-
+          model.matrix(tf, M)
+        offset <-
+          model.offset(M)
+        intercept <-
+          attributes(tf)$intercept
+        set <-
+          list(
+            sparselim = 0.9,
+            camp = 0.01,
+            eigendec = TRUE,
+            row.chunk = NULL,
+            tol.solve = .Machine$double.eps,
+            acc = 1e-08,
+            tol.values = 1e-07,
+            tol.vectors = 1e-07,
+            method = match.arg(method)
+          )
+        nmsC <-
+          names(set)
+        set[(namc <-
+               names(set.default))] <- set.default
+        if (length(noNms <-
+                   namc[!namc %in% nmsC]) > 0)
+          warning("unknown names in set.default: ", paste(noNms,
+                                                          collapse = ", "))
+        rval <-
+          speedglm.wfit(
+            y = y,
+            X = X,
+            family = family,
+            weights = weights,
+            start = start,
+            etastart = etastart,
+            mustart = mustart,
+            offset = offset,
+            intercept = intercept,
+            row.chunk = set$row.chunk,
+            maxit = maxit,
+            k = k,
+            acc = set$acc,
+            sparselim = set$sparselim,
+            camp = set$camp,
+            eigendec = set$eigendec,
+            tol.solve = set$tol.solve,
+            sparse = sparse,
+            tol.values = set$tol.values,
+            trace = trace,
+            tol.vectors = set$tol.vectors,
+            method = set$method
+          )
+        rval$terms <-
+          tf
+        rval$call <-
+          call
+        class(rval) <-
+          c("speedglm", "speedlm")
+        if (model)
+          rval$model <-
+          M
+        if (fitted)
+          rval$linear.predictors <-
+          predict.speedlm(rval, newdata = M)
+        if (target)
+          rval$y <-
+          y
+        if ((rval$iter == maxit) &
+            (!rval$convergence))
+          warning("Maximum number of iterations reached without convergence")
+        rval
+      },
+      folder = "~/insuRglm/tests",
+      base_nm = "sev_gamma",
+      seed = 123L,
+      obs_avg_tables = list(
+        pol_yr = structure(
+          list(
+            orig_level = c("2000", "2001",
+                           "2002", "2003", "2004"),
+            weight = c(2L, 1L, 3L, 7L, 3L),
+            obs_avg_pred_nonrescaled = c(
+              4060.14999939,
+              210.35000229,
+              261.106666563333,
+              1154.31142513429,
+              564.84787877
+            ),
+            obs_avg_lin_nonrescaled = c(
+              8.30897519757587,
+              5.34877282092315,
+              5.56492900798477,
+              7.05125927646176,
+              6.3365564537795
+            ),
+            obs_avg_pred_rescaled = c(
+              3.51737833567546,
+              0.182229853841678,
+              0.226201232074748,
+              1,
+              0.489337510199458
+            ),
+            obs_avg_lin_rescaled = c(
+              1.25771592111411,
+              -1.70248645553861,-1.48633026847699,
+              0,
+              -0.71470282268226
+            )
+          ),
+          row.names = c(NA,-5L),
+          class = c("tbl_df", "tbl", "data.frame")
+        ),
+        gender = structure(
+          list(
+            orig_level = c("F", "M"),
+            weight = c(11L, 5L),
+            obs_avg_pred_nonrescaled = c(283.357272928182,
+                                         3154.35272216),
+            obs_avg_lin_nonrescaled = c(5.64670854993465,
+                                        8.05653859454848),
+            obs_avg_pred_rescaled = c(1, 11.1320690291916),
+            obs_avg_lin_rescaled = c(0, 2.40983004461384)
+          ),
+          row.names = c(NA,-2L),
+          class = c("tbl_df", "tbl", "data.frame")
+        ),
+        agecat = structure(
+          list(
+            orig_level = c("1", "2", "3", "4", "5", "6"),
+            weight = c(2L,
+                       4L, 5L, 3L, 1L, 1L),
+            obs_avg_pred_nonrescaled = c(
+              2401.90498899,
+              687.6949995725,
+              269.488000392,
+              3050.96454493333,
+              353.76999998,
+              480
+            ),
+            obs_avg_lin_nonrescaled = c(
+              7.78401744689924,
+              6.53334542506553,
+              5.59652386391064,
+              8.02321306384722,
+              5.86864698440522,
+              6.17378610390194
+            ),
+            obs_avg_pred_rescaled = c(
+              8.91284578718223,
+              2.55185759132938,
+              1,
+              11.3213372784516,
+              1.31274861762083,
+              1.78115537352976
+            ),
+            obs_avg_lin_rescaled = c(
+              2.1874935829886,
+              0.936821561154892,
+              0,
+              2.42668919993658,
+              0.272123120494585,
+              0.577262239991296
+            )
+          ),
+          row.names = c(NA,-6L),
+          class = c("tbl_df",
+                    "tbl", "data.frame")
+        ),
+        area = structure(
+          list(
+            orig_level = c("A",
+                           "B", "C", "D", "E"),
+            weight = c(6L, 2L, 6L, 1L, 1L),
+            obs_avg_pred_nonrescaled = c(1154.54393560833, 1121.29999899,
+                                         1506.47166689667, 480, 200),
+            obs_avg_lin_nonrescaled = c(
+              7.05146068403262,
+              7.02224400456609,
+              7.31752555115597,
+              6.17378610390194,
+              5.29831736654804
+            ),
+            obs_avg_pred_rescaled = c(
+              1,
+              0.971206001267663,
+              1.30481969584198,
+              0.415748578461058,
+              0.173228574358774
+            ),
+            obs_avg_lin_rescaled = c(
+              0,
+              -0.0292166794665221,
+              0.266064867123355,
+              -0.87767458013068,
+              -1.75314331748458
+            )
+          ),
+          row.names = c(NA,-5L),
+          class = c("tbl_df", "tbl",
+                    "data.frame")
+        ),
+        veh_body = structure(
+          list(
+            orig_level = c("HBACK",
+                           "SEDAN", "STNWG"),
+            weight = c(5L, 7L, 4L),
+            obs_avg_pred_nonrescaled = c(2596.137995814,
+                                         418.33051947, 744.9224994125),
+            obs_avg_lin_nonrescaled = c(7.86178023350441,
+                                        6.03627183650862, 6.61328018533408),
+            obs_avg_pred_rescaled = c(6.20594930320444,
+                                      1, 1.78070321131787),
+            obs_avg_lin_rescaled = c(1.82550839699579,
+                                     0, 0.577008348825463)
+          ),
+          row.names = c(NA,-3L),
+          class = c("tbl_df",
+                    "tbl", "data.frame")
+        ),
+        veh_age = structure(
+          list(
+            orig_level = c("1",
+                           "2", "3", "4"),
+            weight = c(6L, 6L, 3L, 1L),
+            obs_avg_pred_nonrescaled = c(1560.73666684167,
+                                         446.203939275, 1652.73999277, 1888.829998),
+            obs_avg_lin_nonrescaled = c(
+              7.35291321111611,
+              6.10077611045565,
+              7.41018979129897,
+              7.54371286768669
+            ),
+            obs_avg_pred_rescaled = c(1, 0.285893161066015, 1.05894865410865,
+                                      1.21021696877428),
+            obs_avg_lin_rescaled = c(0,-1.25213710066045,
+                                     0.0572765801828661, 0.190799656570587)
+          ),
+          row.names = c(NA,-4L),
+          class = c("tbl_df", "tbl", "data.frame")
+        ),
+        veh_value = structure(
+          list(
+            orig_level = c(
+              "[0,0.9]",
+              "(0.9,1.32]",
+              "(1.32,1.71]",
+              "(1.71,2.44]",
+              "(2.44,34.6]"
+            ),
+            weight = c(1L, 4L,
+                       2L, 4L, 5L),
+            obs_avg_pred_nonrescaled = c(
+              4450.039978,
+              687.6949995725,
+              3988.440000545,
+              485.033408995,
+              354.17199993
+            ),
+            obs_avg_lin_nonrescaled = c(
+              8.40066835894016,
+              6.53334542506553,
+              8.29115545612534,
+              6.18421777309083,
+              5.86978267064296
+            ),
+            obs_avg_pred_rescaled = c(
+              12.5646295553559,
+              1.94169781831545,
+              11.2613080687725,
+              1.36948547341649,
+              1
+            ),
+            obs_avg_lin_rescaled = c(
+              2.53088568829719,
+              0.663562754422568,
+              2.42137278548237,
+              0.314435102447862,
+              0
+            )
+          ),
+          row.names = c(NA,-5L),
+          class = c("tbl_df", "tbl", "data.frame")
+        )
+      ),
       data_train = structure(
         list(
+          sev = c(
+            200,
+            1888.829998,
+            200,
+            200,
+            7766.5299988,
+            1186.363636,
+            480,
+            254.090000155,
+            353.76999998,
+            4450.039978,
+            353.76999998,
+            353.76999998,
+            210.35000229,
+            353.76999998,
+            383.31999969
+          ),
+          numclaims = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 1L,
+                        1L, 1L, 1L, 1L, 1L, 1L),
           pol_nbr = c(
             "334473",
             "245147",
@@ -926,15 +1458,6 @@ test_that("setup produces what it should", {
             "450359",
             "141285",
             "406732"
-          ),
-          pol_yr = structure(
-            c(3L, 4L, 3L, 4L, 1L, 5L, 4L,
-              5L, 1L, 4L, 4L, 4L, 2L, 4L, 3L),
-            .Label = c("2000", "2001",
-                       "2002", "2003", "2004"),
-            class = c("simple_factor", "factor"),
-            orig_levels = c("2000", "2001", "2002", "2003", "2004"),
-            base_level = "2003"
           ),
           exposure = c(
             0.3011635866,
@@ -970,33 +1493,46 @@ test_that("setup produces what it should", {
             2680.62898468824,
             1726.79635032368
           ),
+          pol_yr = structure(
+            c(3L, 4L, 3L, 4L, 1L, 5L, 4L, 5L,
+              1L, 4L, 4L, 4L, 2L, 4L, 3L),
+            .Label = c("2000", "2001",
+                       "2002", "2003", "2004"),
+            class = c("simple_factor", "factor"),
+            var_nm = "pol_yr",
+            orig_levels = c("2000", "2001",
+                            "2002", "2003", "2004"),
+            base_level = "2003"
+          ),
           gender = structure(
             c(1L,
               2L, 1L, 1L, 2L, 2L, 2L, 1L, 1L, 2L, 1L, 1L, 1L, 1L, 1L),
-            .Label = c("F",
-                       "M"),
+            .Label = c("F", "M"),
             class = c("simple_factor", "factor"),
-            orig_levels = c("F",
-                            "M"),
+            var_nm = "gender",
+            orig_levels = c("F", "M"),
             base_level = "F"
           ),
           agecat = structure(
-            c(4L, 2L, 3L,
-              3L, 4L, 4L, 6L, 2L, 5L, 1L, 1L, 3L, 3L, 2L, 3L),
-            .Label = c("1",
-                       "2", "3", "4", "5", "6"),
+            c(4L, 2L, 3L, 3L, 4L, 4L, 6L, 2L,
+              5L, 1L, 1L, 3L, 3L, 2L, 3L),
+            .Label = c("1", "2", "3",
+                       "4", "5", "6"),
             class = c("simple_factor", "factor"),
-            orig_levels = c("1", "2", "3", "4", "5", "6"),
+            var_nm = "agecat",
+            orig_levels = c("1",
+                            "2", "3", "4", "5", "6"),
             base_level = "3"
           ),
           area = structure(
-            c(5L, 2L, 1L, 3L, 3L, 1L, 4L, 3L, 2L,
-              1L, 1L, 3L, 3L, 1L, 1L),
-            .Label = c("A", "B", "C", "D",
-                       "E", "F"),
-            class = c("simple_factor", "factor"),
-            orig_levels = c("A",
-                            "B", "C", "D", "E", "F"),
+            c(5L,
+              2L, 1L, 3L, 3L, 1L, 4L, 3L, 2L, 1L, 1L, 3L, 3L, 1L, 1L),
+            .Label = c("A", "B", "C", "D", "E", "F"),
+            class = c("simple_factor",
+                      "factor"),
+            var_nm = "area",
+            orig_levels = c("A", "B",
+                            "C", "D", "E", "F"),
             base_level = "A"
           ),
           veh_body = structure(
@@ -1020,6 +1556,7 @@ test_that("setup produces what it should", {
             ),
             class = c("simple_factor",
                       "factor"),
+            var_nm = "veh_body",
             orig_levels = c(
               "BUS",
               "CONVT",
@@ -1038,17 +1575,19 @@ test_that("setup produces what it should", {
             base_level = "SEDAN"
           ),
           veh_age = structure(
-            c(1L,
-              4L, 2L, 2L, 1L, 2L, 1L, 3L, 1L, 3L, 2L, 2L, 1L, 1L, 2L),
-            .Label = c("1", "2", "3", "4"),
-            class = c("simple_factor",
-                      "factor"),
-            orig_levels = c("1", "2", "3", "4"),
+            c(1L, 4L, 2L, 2L, 1L, 2L, 1L, 3L,
+              1L, 3L, 2L, 2L, 1L, 1L, 2L),
+            .Label = c("1", "2", "3",
+                       "4"),
+            class = c("simple_factor", "factor"),
+            var_nm = "veh_age",
+            orig_levels = c("1",
+                            "2", "3", "4"),
             base_level = "1"
           ),
           veh_value = structure(
-            c(5L, 2L, 4L, 4L, 3L, 4L, 5L, 2L,
-              5L, 1L, 2L, 4L, 3L, 5L, 5L),
+            c(5L,
+              2L, 4L, 4L, 3L, 4L, 5L, 2L, 5L, 1L, 2L, 4L, 3L, 5L, 5L),
             .Label = c(
               "[0,0.9]",
               "(0.9,1.32]",
@@ -1058,6 +1597,7 @@ test_that("setup produces what it should", {
             ),
             class = c("simple_factor",
                       "factor"),
+            var_nm = "veh_value",
             orig_levels = c(
               "[0,0.9]",
               "(0.9,1.32]",
@@ -1066,45 +1606,18 @@ test_that("setup produces what it should", {
               "(2.44,34.6]"
             ),
             base_level = "(2.44,34.6]"
-          ),
-          numclaims = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 1L, 1L,
-                        1L, 1L, 1L, 1L, 1L),
-          sev = c(
-            200,
-            1888.829998,
-            200,
-            200,
-            7766.5299988,
-            1186.363636,
-            480,
-            254.090000155,
-            353.76999998,
-            4450.039978,
-            353.76999998,
-            353.76999998,
-            210.35000229,
-            353.76999998,
-            383.31999969
           )
         ),
         row.names = c(NA,-15L),
-        class = c("tbl_df",
-                  "tbl", "data.frame")
+        class = c("tbl_df", "tbl", "data.frame")
       ),
       data_test = structure(
         list(
+          sev = c(200, 3981.2299957, 1265.4499969, 2723.0399933,
+                  200),
+          numclaims = c(1L, 1L, 1L, 1L, 1L),
           pol_nbr = c("214771",
                       "489640", "344317", "487354", "382906"),
-          pol_yr = structure(
-            c(5L,
-              1L, 1L, 4L, 4L),
-            .Label = c("2000", "2001", "2002", "2003",
-                       "2004"),
-            class = c("simple_factor", "factor"),
-            orig_levels = c("2000",
-                            "2001", "2002", "2003", "2004"),
-            base_level = "2003"
-          ),
           exposure = c(
             0.7118412047,
             0.4873374401,
@@ -1119,36 +1632,52 @@ test_that("setup produces what it should", {
             437.188861409991,
             409.00149747586
           ),
+          pol_yr = structure(
+            c(5L,
+              1L, 1L, 4L, 4L),
+            .Label = c("2000", "2001", "2002", "2003",
+                       "2004"),
+            class = c("simple_factor", "factor"),
+            var_nm = "pol_yr",
+            orig_levels = c("2000",
+                            "2001", "2002", "2003", "2004"),
+            base_level = "2003"
+          ),
           gender = structure(
             c(1L, 2L, 2L, 1L, 1L),
             .Label = c("F",
                        "M"),
             class = c("simple_factor", "factor"),
+            var_nm = "gender",
             orig_levels = c("F",
                             "M"),
             base_level = "F"
           ),
           agecat = structure(
-            c(3L, 1L, 3L,
-              2L, 4L),
+            c(3L, 1L,
+              3L, 2L, 4L),
             .Label = c("1", "2", "3", "4", "5", "6"),
             class = c("simple_factor",
                       "factor"),
-            orig_levels = c("1", "2", "3", "4", "5", "6"),
+            var_nm = "agecat",
+            orig_levels = c("1", "2",
+                            "3", "4", "5", "6"),
             base_level = "3"
           ),
           area = structure(
-            c(3L, 2L, 1L, 4L, 3L),
-            .Label = c("A",
-                       "B", "C", "D", "E", "F"),
-            class = c("simple_factor",
-                      "factor"),
-            orig_levels = c("A", "B", "C", "D", "E", "F"),
+            c(3L,
+              2L, 1L, 4L, 3L),
+            .Label = c("A", "B", "C", "D", "E",
+                       "F"),
+            class = c("simple_factor", "factor"),
+            var_nm = "area",
+            orig_levels = c("A",
+                            "B", "C", "D", "E", "F"),
             base_level = "A"
           ),
           veh_body = structure(
-            c(11L, 4L,
-              4L, 11L, 10L),
+            c(11L,
+              4L, 4L, 11L, 10L),
             .Label = c(
               "BUS",
               "CONVT",
@@ -1166,6 +1695,7 @@ test_that("setup produces what it should", {
             ),
             class = c("simple_factor",
                       "factor"),
+            var_nm = "veh_body",
             orig_levels = c(
               "BUS",
               "CONVT",
@@ -1184,16 +1714,18 @@ test_that("setup produces what it should", {
             base_level = "SEDAN"
           ),
           veh_age = structure(
-            c(3L,
-              1L, 2L, 4L, 3L),
-            .Label = c("1", "2", "3", "4"),
-            class = c("simple_factor",
-                      "factor"),
-            orig_levels = c("1", "2", "3", "4"),
+            c(3L, 1L, 2L, 4L, 3L),
+            .Label = c("1",
+                       "2", "3", "4"),
+            class = c("simple_factor", "factor"),
+            var_nm = "veh_age",
+            orig_levels = c("1",
+                            "2", "3", "4"),
             base_level = "1"
           ),
           veh_value = structure(
-            c(3L, 3L, 3L, 1L, 3L),
+            c(3L,
+              3L, 3L, 1L, 3L),
             .Label = c(
               "[0,0.9]",
               "(0.9,1.32]",
@@ -1201,7 +1733,9 @@ test_that("setup produces what it should", {
               "(1.71,2.44]",
               "(2.44,34.6]"
             ),
-            class = c("simple_factor", "factor"),
+            class = c("simple_factor",
+                      "factor"),
+            var_nm = "veh_value",
             orig_levels = c(
               "[0,0.9]",
               "(0.9,1.32]",
@@ -1210,20 +1744,16 @@ test_that("setup produces what it should", {
               "(2.44,34.6]"
             ),
             base_level = "(2.44,34.6]"
-          ),
-          numclaims = c(1L, 1L,
-                        1L, 1L, 1L),
-          sev = c(200, 3981.2299957, 1265.4499969,
-                  2723.0399933, 200)
+          )
         ),
         row.names = c(NA,-5L),
-        class = c("tbl_df",
-                  "tbl", "data.frame")
+        class = c("tbl_df", "tbl", "data.frame")
       ),
       current_model = structure(
         list(
           target = "sev",
           weight = "numclaims",
+          offset = NULL,
           family = structure(
             list(
               family = "Gamma",
@@ -1283,14 +1813,16 @@ test_that("setup produces what it should", {
               levels = c("2000", "2001", "2002",
                          "2003", "2004"),
               class = c("simple_factor", "factor"),
-              orig_levels = c("2000", "2001", "2002", "2003",
-                              "2004"),
+              var_nm = "pol_yr",
+              orig_levels = c("2000", "2001",
+                              "2002", "2003", "2004"),
               base_level = "2003"
             ),
             gender = list(
-              levels = c("F",
-                         "M"),
-              class = c("simple_factor", "factor"),
+              levels = c("F", "M"),
+              class = c("simple_factor",
+                        "factor"),
+              var_nm = "gender",
               orig_levels = c("F",
                               "M"),
               base_level = "F"
@@ -1300,17 +1832,18 @@ test_that("setup produces what it should", {
                          "2", "3", "4", "5", "6"),
               class = c("simple_factor",
                         "factor"),
-              orig_levels = c("1", "2", "3", "4", "5",
-                              "6"),
+              var_nm = "agecat",
+              orig_levels = c("1",
+                              "2", "3", "4", "5", "6"),
               base_level = "3"
             ),
             area = list(
-              levels = c("A",
-                         "B", "C", "D", "E", "F"),
+              levels = c("A", "B", "C", "D", "E", "F"),
               class = c("simple_factor",
                         "factor"),
-              orig_levels = c("A", "B", "C", "D", "E",
-                              "F"),
+              var_nm = "area",
+              orig_levels = c("A",
+                              "B", "C", "D", "E", "F"),
               base_level = "A"
             ),
             veh_body = list(
@@ -1329,7 +1862,9 @@ test_that("setup produces what it should", {
                 "TRUCK",
                 "UTE"
               ),
-              class = c("simple_factor", "factor"),
+              class = c("simple_factor",
+                        "factor"),
+              var_nm = "veh_body",
               orig_levels = c(
                 "BUS",
                 "CONVT",
@@ -1351,7 +1886,9 @@ test_that("setup produces what it should", {
               levels = c("1",
                          "2", "3", "4"),
               class = c("simple_factor", "factor"),
-              orig_levels = c("1", "2", "3", "4"),
+              var_nm = "veh_age",
+              orig_levels = c("1", "2",
+                              "3", "4"),
               base_level = "1"
             ),
             veh_value = list(
@@ -1362,8 +1899,8 @@ test_that("setup produces what it should", {
                 "(1.71,2.44]",
                 "(2.44,34.6]"
               ),
-              class = c("simple_factor",
-                        "factor"),
+              class = c("simple_factor", "factor"),
+              var_nm = "veh_value",
               orig_levels = c(
                 "[0,0.9]",
                 "(0.9,1.32]",
@@ -1374,17 +1911,128 @@ test_that("setup produces what it should", {
               base_level = "(2.44,34.6]"
             )
           ),
+          glm_fun = function (formula,
+                              data,
+                              family = gaussian(),
+                              weights = NULL,
+                              start = NULL,
+                              etastart = NULL,
+                              mustart = NULL,
+                              offset = NULL,
+                              maxit = 25,
+                              k = 2,
+                              sparse = NULL,
+                              set.default = list(),
+                              trace = FALSE,
+                              method = c("eigen",
+                                         "Cholesky", "qr"),
+                              model = FALSE,
+                              y = FALSE,
+                              fitted = FALSE,
+                              ...)
+          {
+            call <- match.call()
+            target <-
+              y
+            M <-
+              match.call(expand.dots = FALSE)
+            m <-
+              match(c("formula", "data", "subset"), names(M),
+                    0L)
+            M <-
+              M[c(1L, m)]
+            M$drop.unused.levels <-
+              TRUE
+            M[[1L]] <-
+              quote(stats::model.frame)
+            M <-
+              eval(M, parent.frame())
+            y <-
+              M[[1]]
+            tf <-
+              attr(M, "terms")
+            X <-
+              model.matrix(tf, M)
+            offset <-
+              model.offset(M)
+            intercept <-
+              attributes(tf)$intercept
+            set <-
+              list(
+                sparselim = 0.9,
+                camp = 0.01,
+                eigendec = TRUE,
+                row.chunk = NULL,
+                tol.solve = .Machine$double.eps,
+                acc = 1e-08,
+                tol.values = 1e-07,
+                tol.vectors = 1e-07,
+                method = match.arg(method)
+              )
+            nmsC <-
+              names(set)
+            set[(namc <-
+                   names(set.default))] <- set.default
+            if (length(noNms <-
+                       namc[!namc %in% nmsC]) > 0)
+              warning("unknown names in set.default: ", paste(noNms,
+                                                              collapse = ", "))
+            rval <-
+              speedglm.wfit(
+                y = y,
+                X = X,
+                family = family,
+                weights = weights,
+                start = start,
+                etastart = etastart,
+                mustart = mustart,
+                offset = offset,
+                intercept = intercept,
+                row.chunk = set$row.chunk,
+                maxit = maxit,
+                k = k,
+                acc = set$acc,
+                sparselim = set$sparselim,
+                camp = set$camp,
+                eigendec = set$eigendec,
+                tol.solve = set$tol.solve,
+                sparse = sparse,
+                tol.values = set$tol.values,
+                trace = trace,
+                tol.vectors = set$tol.vectors,
+                method = set$method
+              )
+            rval$terms <-
+              tf
+            rval$call <-
+              call
+            class(rval) <-
+              c("speedglm", "speedlm")
+            if (model)
+              rval$model <-
+              M
+            if (fitted)
+              rval$linear.predictors <-
+              predict.speedlm(rval,
+                              newdata = M)
+            if (target)
+              rval$y <-
+              y
+            if ((rval$iter == maxit) &
+                (!rval$convergence))
+              warning("Maximum number of iterations reached without convergence")
+            rval
+          },
           betas = structure(
             list(
               factor = "(Intercept)",
               actual_level = "(Intercept)",
-              estimate = 7.07373007830543,
-              std_error = 0.452668332567591,
+              estimate = 7.0737301,
+              std_error = 0.4526683,
               std_error_pct = "6%"
             ),
             row.names = c(NA,-1L),
-            class = c("tbl_df",
-                      "tbl", "data.frame")
+            class = c("tbl_df", "tbl", "data.frame")
           ),
           beta_triangles = list(),
           model_stats = structure(
@@ -1393,15 +2041,15 @@ test_that("setup produces what it should", {
               df.null = 14L,
               logLik = -128.735038997948,
               AIC = 261.470077995896,
-              BIC = 262.8861783981,
+              BIC = NA_real_,
               deviance = 26.5654539001954,
               df.residual = 14L,
-              dispersion = 3.27853790895238
+              dispersion = 3.27853790895237
             ),
             row.names = c(NA,-1L),
             class = c("tbl_df", "tbl", "data.frame")
           ),
-          current_baseline = 7.07373007830543,
+          current_baseline = 7.0737301,
           factor_tables = list(
             pol_yr = structure(
               list(
@@ -1441,11 +2089,11 @@ test_that("setup produces what it should", {
                   -0.71470282268226
                 ),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709
                 ),
                 fitted_avg_lin_nonrescaled = c(
                   7.07373007830543,
@@ -1487,8 +2135,8 @@ test_that("setup produces what it should", {
                                             8.05653859454848),
                 obs_avg_pred_rescaled = c(1, 11.1320690291916),
                 obs_avg_lin_rescaled = c(0, 2.40983004461384),
-                fitted_avg_pred_nonrescaled = c(1180.54335085708,
-                                                1180.54335085708),
+                fitted_avg_pred_nonrescaled = c(1180.54335085709,
+                                                1180.54335085709),
                 fitted_avg_lin_nonrescaled = c(7.07373007830543,
                                                7.07373007830543),
                 fitted_avg_pred_rescaled = c(1, 1),
@@ -1547,12 +2195,12 @@ test_that("setup produces what it should", {
                   0.577262239991296
                 ),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709
                 ),
                 fitted_avg_lin_nonrescaled = c(
                   7.07373007830543,
@@ -1617,11 +2265,11 @@ test_that("setup produces what it should", {
                   NA
                 ),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
                   NA
                 ),
                 fitted_avg_lin_nonrescaled = c(
@@ -1764,14 +2412,14 @@ test_that("setup produces what it should", {
                   NA,
                   NA,
                   NA,
-                  1180.54335085708,
+                  1180.54335085709,
                   NA,
                   NA,
                   NA,
                   NA,
                   NA,
-                  1180.54335085708,
-                  1180.54335085708,
+                  1180.54335085709,
+                  1180.54335085709,
                   NA,
                   NA
                 ),
@@ -1879,10 +2527,10 @@ test_that("setup produces what it should", {
                                           1.05894865410865, 1.21021696877428),
                 obs_avg_lin_rescaled = c(0,-1.25213710066045, 0.0572765801828661, 0.190799656570587),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709
                 ),
                 fitted_avg_lin_nonrescaled = c(
                   7.07373007830543,
@@ -1961,11 +2609,11 @@ test_that("setup produces what it should", {
                   0
                 ),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709
                 ),
                 fitted_avg_lin_nonrescaled = c(
                   7.07373007830543,
@@ -1994,23 +2642,23 @@ test_that("setup produces what it should", {
                         "tbl", "data.frame")
             )
           ),
-          relativities = list(`0 - base_value` = 1180.54335085708),
+          relativities = list(`base_value` = 1180.54337646846),
           train_predictions = c(
-            `1` = 1180.54335085708,
-            `2` = 1180.54335085708,
-            `3` = 1180.54335085708,
-            `4` = 1180.54335085708,
-            `5` = 1180.54335085708,
-            `6` = 1180.54335085708,
-            `7` = 1180.54335085708,
-            `8` = 1180.54335085708,
-            `9` = 1180.54335085708,
-            `10` = 1180.54335085708,
-            `11` = 1180.54335085708,
-            `12` = 1180.54335085708,
-            `13` = 1180.54335085708,
-            `14` = 1180.54335085708,
-            `15` = 1180.54335085708
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709
           ),
           test_predictions = NULL,
           cv_predictions = NULL
@@ -2021,6 +2669,7 @@ test_that("setup produces what it should", {
         list(
           target = "sev",
           weight = "numclaims",
+          offset = NULL,
           family = structure(
             list(
               family = "Gamma",
@@ -2080,14 +2729,16 @@ test_that("setup produces what it should", {
               levels = c("2000", "2001", "2002",
                          "2003", "2004"),
               class = c("simple_factor", "factor"),
-              orig_levels = c("2000", "2001", "2002", "2003",
-                              "2004"),
+              var_nm = "pol_yr",
+              orig_levels = c("2000", "2001",
+                              "2002", "2003", "2004"),
               base_level = "2003"
             ),
             gender = list(
-              levels = c("F",
-                         "M"),
-              class = c("simple_factor", "factor"),
+              levels = c("F", "M"),
+              class = c("simple_factor",
+                        "factor"),
+              var_nm = "gender",
               orig_levels = c("F",
                               "M"),
               base_level = "F"
@@ -2097,17 +2748,18 @@ test_that("setup produces what it should", {
                          "2", "3", "4", "5", "6"),
               class = c("simple_factor",
                         "factor"),
-              orig_levels = c("1", "2", "3", "4", "5",
-                              "6"),
+              var_nm = "agecat",
+              orig_levels = c("1",
+                              "2", "3", "4", "5", "6"),
               base_level = "3"
             ),
             area = list(
-              levels = c("A",
-                         "B", "C", "D", "E", "F"),
+              levels = c("A", "B", "C", "D", "E", "F"),
               class = c("simple_factor",
                         "factor"),
-              orig_levels = c("A", "B", "C", "D", "E",
-                              "F"),
+              var_nm = "area",
+              orig_levels = c("A",
+                              "B", "C", "D", "E", "F"),
               base_level = "A"
             ),
             veh_body = list(
@@ -2126,7 +2778,9 @@ test_that("setup produces what it should", {
                 "TRUCK",
                 "UTE"
               ),
-              class = c("simple_factor", "factor"),
+              class = c("simple_factor",
+                        "factor"),
+              var_nm = "veh_body",
               orig_levels = c(
                 "BUS",
                 "CONVT",
@@ -2148,7 +2802,9 @@ test_that("setup produces what it should", {
               levels = c("1",
                          "2", "3", "4"),
               class = c("simple_factor", "factor"),
-              orig_levels = c("1", "2", "3", "4"),
+              var_nm = "veh_age",
+              orig_levels = c("1", "2",
+                              "3", "4"),
               base_level = "1"
             ),
             veh_value = list(
@@ -2159,8 +2815,8 @@ test_that("setup produces what it should", {
                 "(1.71,2.44]",
                 "(2.44,34.6]"
               ),
-              class = c("simple_factor",
-                        "factor"),
+              class = c("simple_factor", "factor"),
+              var_nm = "veh_value",
               orig_levels = c(
                 "[0,0.9]",
                 "(0.9,1.32]",
@@ -2171,17 +2827,128 @@ test_that("setup produces what it should", {
               base_level = "(2.44,34.6]"
             )
           ),
+          glm_fun = function (formula,
+                              data,
+                              family = gaussian(),
+                              weights = NULL,
+                              start = NULL,
+                              etastart = NULL,
+                              mustart = NULL,
+                              offset = NULL,
+                              maxit = 25,
+                              k = 2,
+                              sparse = NULL,
+                              set.default = list(),
+                              trace = FALSE,
+                              method = c("eigen",
+                                         "Cholesky", "qr"),
+                              model = FALSE,
+                              y = FALSE,
+                              fitted = FALSE,
+                              ...)
+          {
+            call <- match.call()
+            target <-
+              y
+            M <-
+              match.call(expand.dots = FALSE)
+            m <-
+              match(c("formula", "data", "subset"), names(M),
+                    0L)
+            M <-
+              M[c(1L, m)]
+            M$drop.unused.levels <-
+              TRUE
+            M[[1L]] <-
+              quote(stats::model.frame)
+            M <-
+              eval(M, parent.frame())
+            y <-
+              M[[1]]
+            tf <-
+              attr(M, "terms")
+            X <-
+              model.matrix(tf, M)
+            offset <-
+              model.offset(M)
+            intercept <-
+              attributes(tf)$intercept
+            set <-
+              list(
+                sparselim = 0.9,
+                camp = 0.01,
+                eigendec = TRUE,
+                row.chunk = NULL,
+                tol.solve = .Machine$double.eps,
+                acc = 1e-08,
+                tol.values = 1e-07,
+                tol.vectors = 1e-07,
+                method = match.arg(method)
+              )
+            nmsC <-
+              names(set)
+            set[(namc <-
+                   names(set.default))] <- set.default
+            if (length(noNms <-
+                       namc[!namc %in% nmsC]) > 0)
+              warning("unknown names in set.default: ", paste(noNms,
+                                                              collapse = ", "))
+            rval <-
+              speedglm.wfit(
+                y = y,
+                X = X,
+                family = family,
+                weights = weights,
+                start = start,
+                etastart = etastart,
+                mustart = mustart,
+                offset = offset,
+                intercept = intercept,
+                row.chunk = set$row.chunk,
+                maxit = maxit,
+                k = k,
+                acc = set$acc,
+                sparselim = set$sparselim,
+                camp = set$camp,
+                eigendec = set$eigendec,
+                tol.solve = set$tol.solve,
+                sparse = sparse,
+                tol.values = set$tol.values,
+                trace = trace,
+                tol.vectors = set$tol.vectors,
+                method = set$method
+              )
+            rval$terms <-
+              tf
+            rval$call <-
+              call
+            class(rval) <-
+              c("speedglm", "speedlm")
+            if (model)
+              rval$model <-
+              M
+            if (fitted)
+              rval$linear.predictors <-
+              predict.speedlm(rval,
+                              newdata = M)
+            if (target)
+              rval$y <-
+              y
+            if ((rval$iter == maxit) &
+                (!rval$convergence))
+              warning("Maximum number of iterations reached without convergence")
+            rval
+          },
           betas = structure(
             list(
               factor = "(Intercept)",
               actual_level = "(Intercept)",
-              estimate = 7.07373007830543,
-              std_error = 0.452668332567591,
+              estimate = 7.0737301,
+              std_error = 0.4526683,
               std_error_pct = "6%"
             ),
             row.names = c(NA,-1L),
-            class = c("tbl_df",
-                      "tbl", "data.frame")
+            class = c("tbl_df", "tbl", "data.frame")
           ),
           beta_triangles = list(),
           model_stats = structure(
@@ -2190,15 +2957,15 @@ test_that("setup produces what it should", {
               df.null = 14L,
               logLik = -128.735038997948,
               AIC = 261.470077995896,
-              BIC = 262.8861783981,
+              BIC = NA_real_,
               deviance = 26.5654539001954,
               df.residual = 14L,
-              dispersion = 3.27853790895238
+              dispersion = 3.27853790895237
             ),
             row.names = c(NA,-1L),
             class = c("tbl_df", "tbl", "data.frame")
           ),
-          current_baseline = 7.07373007830543,
+          current_baseline = 7.0737301,
           factor_tables = list(
             pol_yr = structure(
               list(
@@ -2238,11 +3005,11 @@ test_that("setup produces what it should", {
                   -0.71470282268226
                 ),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709
                 ),
                 fitted_avg_lin_nonrescaled = c(
                   7.07373007830543,
@@ -2284,8 +3051,8 @@ test_that("setup produces what it should", {
                                             8.05653859454848),
                 obs_avg_pred_rescaled = c(1, 11.1320690291916),
                 obs_avg_lin_rescaled = c(0, 2.40983004461384),
-                fitted_avg_pred_nonrescaled = c(1180.54335085708,
-                                                1180.54335085708),
+                fitted_avg_pred_nonrescaled = c(1180.54335085709,
+                                                1180.54335085709),
                 fitted_avg_lin_nonrescaled = c(7.07373007830543,
                                                7.07373007830543),
                 fitted_avg_pred_rescaled = c(1, 1),
@@ -2344,12 +3111,12 @@ test_that("setup produces what it should", {
                   0.577262239991296
                 ),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709
                 ),
                 fitted_avg_lin_nonrescaled = c(
                   7.07373007830543,
@@ -2414,11 +3181,11 @@ test_that("setup produces what it should", {
                   NA
                 ),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
                   NA
                 ),
                 fitted_avg_lin_nonrescaled = c(
@@ -2561,14 +3328,14 @@ test_that("setup produces what it should", {
                   NA,
                   NA,
                   NA,
-                  1180.54335085708,
+                  1180.54335085709,
                   NA,
                   NA,
                   NA,
                   NA,
                   NA,
-                  1180.54335085708,
-                  1180.54335085708,
+                  1180.54335085709,
+                  1180.54335085709,
                   NA,
                   NA
                 ),
@@ -2676,10 +3443,10 @@ test_that("setup produces what it should", {
                                           1.05894865410865, 1.21021696877428),
                 obs_avg_lin_rescaled = c(0,-1.25213710066045, 0.0572765801828661, 0.190799656570587),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709
                 ),
                 fitted_avg_lin_nonrescaled = c(
                   7.07373007830543,
@@ -2758,11 +3525,11 @@ test_that("setup produces what it should", {
                   0
                 ),
                 fitted_avg_pred_nonrescaled = c(
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708,
-                  1180.54335085708
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709,
+                  1180.54335085709
                 ),
                 fitted_avg_lin_nonrescaled = c(
                   7.07373007830543,
@@ -2791,23 +3558,23 @@ test_that("setup produces what it should", {
                         "tbl", "data.frame")
             )
           ),
-          relativities = list(`0 - base_value` = 1180.54335085708),
+          relativities = list(`base_value` = 1180.54337646846),
           train_predictions = c(
-            `1` = 1180.54335085708,
-            `2` = 1180.54335085708,
-            `3` = 1180.54335085708,
-            `4` = 1180.54335085708,
-            `5` = 1180.54335085708,
-            `6` = 1180.54335085708,
-            `7` = 1180.54335085708,
-            `8` = 1180.54335085708,
-            `9` = 1180.54335085708,
-            `10` = 1180.54335085708,
-            `11` = 1180.54335085708,
-            `12` = 1180.54335085708,
-            `13` = 1180.54335085708,
-            `14` = 1180.54335085708,
-            `15` = 1180.54335085708
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709,
+            1180.54335085709
           ),
           test_predictions = NULL,
           cv_predictions = NULL
@@ -2819,6 +3586,9 @@ test_that("setup produces what it should", {
   )
 
   no_print(setup <- do.call(setup, args))
+
+  file.remove("~/insuRglm/tests/sev_gamma_setup.rds")
+  file.remove("~/insuRglm/tests/sev_gamma_model.rds")
 
   expect_equal(setup, correct_result)
 

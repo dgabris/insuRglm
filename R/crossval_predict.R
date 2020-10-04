@@ -1,4 +1,4 @@
-crossval_predict <- function(data_train, model, cv_folds) {
+crossval_predict <- function(data_train, model, cv_folds, seed) {
   stopifnot(inherits(data_train, "data.frame"))
   stopifnot(inherits(model, "fitted_model"))
   stopifnot(is.numeric(cv_folds) || is.integer(cv_folds))
@@ -20,9 +20,12 @@ crossval_predict <- function(data_train, model, cv_folds) {
 
   family <- model$family
   weight <- model$weight
+  offset <- model$offset
 
-  cv_predictions_list <- furrr::future_map(seq_len(cv_folds), function(fold) {
+  train <- train[c("id", target, weight, offset, predictors, "cv_fold")]
+  glm_fun <- model$glm_fun
 
+  cv_predictions_list <- furrr::future_map(seq_len(cv_folds), carrier::crate(function(fold) {
     fold_train <- train %>%
       dplyr::filter(cv_fold != fold)
 
@@ -30,20 +33,31 @@ crossval_predict <- function(data_train, model, cv_folds) {
       dplyr::filter(cv_fold == fold)
 
     glm <- do.call(
-      glm,
+      glm_fun,
       list(
         formula = formula,
         family = family,
         weights = fold_train[[weight]],
+        offset = if(!is.null(offset)) log(fold_train[[offset]]) else NULL,
         data = fold_train
       )
     )
 
     tibble::tibble(
       id = fold_test$id,
-      cv_pred_target = predict(glm, newdata = fold_test, type = "response")
+      cv_pred_target = stats::predict(glm, newdata = fold_test, type = "response")
     )
-  })
+  },
+  train = train,
+  glm_fun = glm_fun,
+  formula = formula,
+  family = family,
+  weight = weight,
+  offset = offset,
+  `%>%` = `%>%`
+  ),
+  .options = furrr::future_options(globals = FALSE, seed = seed)
+  )
 
   dplyr::bind_rows(!!!cv_predictions_list) %>%
     dplyr::arrange(id) %>%

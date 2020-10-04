@@ -4,7 +4,7 @@
 \alias{model_crossval}
 \title{Train all insuRglm models on CV data}
 \usage{
-model_crossval(setup, cv_folds = 10, stratified = FALSE)
+model_crossval(setup, cv_folds = 10, stratified = FALSE, seed = NULL)
 }
 \arguments{
 \item{setup}{Setup object. Created at the start of the workflow. Usually piped in from previous step.}
@@ -13,6 +13,9 @@ model_crossval(setup, cv_folds = 10, stratified = FALSE)
 
 \item{stratified}{Boolean scalar. Whether to stratify losses and non-losses.
 This will help in creating more representative crossvalidation folds with datasets that contain very few non-zero losses.}
+
+\item{seed}{Numeric scalar. Seed for reproducible random number generation, e.g. for creating CV folds. Will override
+seed created during setup.}
 }
 \value{
 Setup object with updated attributes.

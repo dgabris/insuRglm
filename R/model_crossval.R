@@ -7,6 +7,8 @@
 #' @param cv_folds Integer scalar. Number of rancom CV folds to be used.
 #' @param stratified Boolean scalar. Whether to stratify losses and non-losses.
 #' This will help in creating more representative crossvalidation folds with datasets that contain very few non-zero losses.
+#' @param seed Numeric scalar. Seed for reproducible random number generation, e.g. for creating CV folds. Will override
+#' seed created during setup.
 #'
 #' @return Setup object with updated attributes.
 #' @export
@@ -46,11 +48,20 @@
 #'   model_lift(data = 'crossval')
 #'
 
-model_crossval <- function(setup, cv_folds = 10, stratified = FALSE) {
+model_crossval <- function(setup, cv_folds = 10, stratified = FALSE, seed = NULL) {
   if(!inherits(setup, 'setup')) stop('Setup object is not correct')
   if(!inherits(setup, 'modeling')) stop("No model is fitted. Please run 'model_fit' first")
   if(!(is.numeric(cv_folds) && length(cv_folds) == 1)) stop("'cv_folds' must be a numeric scalar")
   if(!(is.logical(stratified) && length(stratified) == 1)) stop("'stratified' must be a logical scalar")
+
+  if(is.null(seed)) {
+    seed <- setup$seed
+  } else {
+    if(!(length(seed) == 1 && is.numeric(seed))) stop("'seed' must be numeric scalar.")
+    seed <- as.integer(abs(seed))
+  }
+
+  set.seed(seed)
 
   data_train <- setup$data_train %>%
     dplyr::mutate(id = dplyr::row_number())
@@ -81,11 +92,11 @@ model_crossval <- function(setup, cv_folds = 10, stratified = FALSE) {
 
   for(model_nm in names(setup$ref_models)) {
     model <- setup$ref_models[[model_nm]]
-    setup$ref_models[[model_nm]]$cv_predictions <- crossval_predict(data_train, model, cv_folds)
+    setup$ref_models[[model_nm]]$cv_predictions <- crossval_predict(data_train, model, cv_folds, seed)
   }
 
   current_model <- setup$current_model
-  setup$current_model$cv_predictions <- crossval_predict(data_train, current_model, cv_folds)
+  setup$current_model$cv_predictions <- crossval_predict(data_train, current_model, cv_folds, seed)
 
   setup
 
