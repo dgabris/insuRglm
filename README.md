@@ -39,7 +39,7 @@ The tools provided by this package are:
 install.packages("devtools")
 
 # Then you can install from this repository
-devtools::install_github("realgabon/insuRglm@master", build_vignettes = TRUE)
+devtools::install_github("dgabris/insuRglm", build_vignettes = TRUE)
 ```
 
 ## Documentation
@@ -74,14 +74,20 @@ setup <- setup(
   family = 'gamma',
   keep_cols = c('pol_nbr', 'exposure', 'premium')
 )
-#> [1] "Setup - OK"
-#> [1] ""
-#> [1] "Train Data:"
-#> [1] "Number of Observations: 3699"
-#> [1] "Weighted Average Target: 1865.06"
-#> [1] "Max. Target: 46868.18"
-#> [1] "Min. Target: 200"
-#> [1] ""
+#> Setting levels with the highest weight as base levels.
+#> 
+#> Attaching package: 'purrr'
+#> The following object is masked from 'package:magrittr':
+#> 
+#>     set_names
+#> Saving setup object to 'C:/Users/daniel.gabris/Documents/insuRglm'
+#> Setup - OK
+#> 
+#> Train Data:
+#> Number of Observations: 3699
+#> Weighted Average Target: 1865.06
+#> Max. Target: 46868.18
+#> Min. Target: 200
 ```
 
 You can explore the target, data and correlations using functions

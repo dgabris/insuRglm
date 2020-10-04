@@ -35,7 +35,7 @@ The tools provided by this package are:
 install.packages("devtools")
 
 # Then you can install from this repository
-devtools::install_github("realgabon/insuRglm@master", build_vignettes = TRUE)
+devtools::install_github("dgabris/insuRglm", build_vignettes = TRUE)
 ```
 
 ## Documentation
