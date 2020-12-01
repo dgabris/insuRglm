@@ -12,8 +12,8 @@ model_stats <- function(glm) {
     tibble::tibble(
       null.deviance = glm$nulldev,
       df.null = glm$nulldf,
-      logLik = glm$logLik,
-      AIC = glm$aic,
+      logLik = c(glm$logLik, NA_real_)[[1]],
+      AIC = c(glm$aic, NA_real_)[[1]],
       BIC = NA_real_,
       deviance = glm$deviance,
       df.residual = glm$df,

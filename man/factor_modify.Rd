@@ -2,7 +2,7 @@
 % Please edit documentation in R/factor_modify.R
 \name{factor_modify}
 \alias{factor_modify}
-\title{Modify predictor in the current model formula}
+\title{Create or modify factor in the modeling dataset}
 \usage{
 factor_modify(setup, ...)
 }
@@ -15,7 +15,7 @@ factor_modify(setup, ...)
 Setup object with updated attributes.
 }
 \description{
-Modifies one or more predictors in the current model formula.
+Modifies one or more factors in the modeling dataset. Predictors in the model formula can also be modified directly.
 }
 \examples{
 require(dplyr) # for the pipe operator

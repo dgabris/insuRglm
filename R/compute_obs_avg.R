@@ -35,10 +35,28 @@ compute_obs_avg <- function(x, target_vector, weight_vector, by = NULL) {
       )
   }
 
-  obs_avg_df %>%
+  obs_avg_df <- obs_avg_df %>%
     dplyr::rename(weight = weight_sum) %>%
     dplyr::select(-base_lvl_idx) %>%
     dplyr::rename(orig_level = x) %>%
     dplyr::mutate(orig_level = as.character(orig_level))
+
+  if(inherits(x, "interaction")) {
+    base_levels <- stringr::str_split(attr(x, "base_level"), "__", simplify = TRUE) %>%
+      as.vector() %>%
+      paste0("(__)?(,", ., ",)(__)?")
+
+    base_lvl_regex <- paste0(base_levels, collapse = "|")
+
+    obs_avg_df <- obs_avg_df %>%
+      dplyr::mutate(
+        obs_avg_pred_rescaled = if_else(stringr::str_detect(orig_level, base_lvl_regex), 1, obs_avg_pred_rescaled),
+        obs_avg_lin_rescaled = if_else(stringr::str_detect(orig_level, base_lvl_regex), 0, obs_avg_lin_rescaled)
+      ) %>%
+      tidyr::separate(orig_level, into = attr(x, "main_effects"), sep = "__") %>%
+      dplyr::mutate_at(attr(x, "main_effects"), function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2"))
+  }
+
+  obs_avg_df
 
 }

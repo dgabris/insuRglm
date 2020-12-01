@@ -1,4 +1,4 @@
-compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas = NULL) {
+compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas = NULL, data_attrs = NULL) {
 
   baseline_estimate <- current_baseline
 
@@ -98,34 +98,193 @@ compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas 
     dplyr::select(-actual_level)
 
   } else if(inherits(x, "interaction")) {
-    mapping <- attr(x, "mapping")
 
-    model_avg_df <- dplyr::bind_cols(
-      orig_level = names(mapping),
-      actual_level = unname(mapping),
-      baseline_estimate = rep(baseline_estimate, length(mapping))
-    ) %>%
-    dplyr::left_join(main_rows, by = c("actual_level")) %>%
-    dplyr::rename(interaction_estimate = estimate) %>%
-    dplyr::mutate(interaction_estimate = coalesce(interaction_estimate, 0)) %>%
-    tidyr::separate(orig_level, into = c("main1", "main2"), sep = "\\.", remove = FALSE) %>%
-    dplyr::left_join(main_rows, by = c("main1" = "actual_level")) %>%
-    dplyr::rename(main1_estimate = estimate) %>%
-    dplyr::mutate(main1_estimate = coalesce(main1_estimate, 0)) %>%
-    dplyr::left_join(main_rows, by = c("main2" = "actual_level")) %>%
-    dplyr::rename(main2_estimate = estimate) %>%
-    dplyr::mutate(main2_estimate = coalesce(main2_estimate, 0)) %>%
-    dplyr::mutate(
-      model_avg_pred_nonrescaled =
-        exp(baseline_estimate) * exp(main1_estimate) * exp(main2_estimate) * exp(interaction_estimate),
-      model_avg_lin_nonrescaled =
-        baseline_estimate + main1_estimate + main2_estimate + interaction_estimate,
-      model_avg_pred_rescaled =
-        exp(main1_estimate) * exp(main2_estimate) * exp(interaction_estimate),
-      model_avg_lin_rescaled =
-        main1_estimate + main2_estimate + interaction_estimate
-    ) %>%
-    dplyr::select(orig_level, starts_with("model_avg"))
+    # TODO - separate this branch into standalone function?
+    stopifnot(!is.null(data_attrs))
+
+    main_effects <- attr(x, "main_effects")
+    components <- attr(x, "components")
+    is_triple_interaction <- length(main_effects) == 3
+
+    base_df <- tibble::tibble(orig_level = levels(x)) %>%
+      tidyr::separate(orig_level, into = main_effects, sep = "__") %>%
+      dplyr::mutate_at(main_effects, function(x) stringr::str_replace(x, "^(,)(.+)(,)$", "\\2")) %>%
+      mutate(estimate_sum = baseline_estimate)
+
+    for(main_effect in main_effects) {
+      effect_betas <- x_betas %>%
+        dplyr::filter(factor == main_effect) %>%
+        dplyr::select(actual_level, estimate)
+
+      base_df <- base_df %>%
+        dplyr::left_join(effect_betas, by = setNames("actual_level", main_effect)) %>%
+        dplyr::mutate(
+          estimate = coalesce(estimate, 0),
+          estimate_sum = estimate_sum + estimate
+        ) %>%
+        dplyr::select(-estimate)
+    }
+
+    for(interaction_effect in components) {
+
+      is_custom_factor <- data_attrs[[interaction_effect]]$class[[1]] == "custom_factor"
+      is_variate <- data_attrs[[interaction_effect]]$class[[1]] == "variate"
+      is_offset <- nrow(dplyr::filter(x_betas, factor == interaction_effect)) == 0
+
+      if(is_triple_interaction) {
+        parent_var <- data_attrs[[interaction_effect]]$parent_var
+        sep_into <- data_attrs[[parent_var]]$main_effects
+      } else {
+        sep_into <- main_effects
+      }
+
+      if(is_custom_factor) {
+        mapping <- data_attrs[[interaction_effect]]$mapping
+
+        effect_betas <- x_betas %>%
+          dplyr::filter(factor == interaction_effect) %>%
+          dplyr::select(actual_level, estimate)
+
+        effect_betas <- tibble::tibble(
+          orig_level = names(mapping),
+          actual_level = as.character(mapping)
+        ) %>%
+          dplyr::left_join(effect_betas, by = "actual_level") %>%
+          tidyr::separate(orig_level, into = sep_into, sep = "__") %>%
+          dplyr::mutate_at(sep_into, function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2")) %>%
+          dplyr::select(-actual_level) %>%
+          dplyr::filter(!is.na(estimate))
+
+      } else if(is_variate) {
+        mapping <- data_attrs[[interaction_effect]]$mapping
+        base_level <- data_attrs[[interaction_effect]]$base_level
+
+        baseline_x_vals <- mapping %>%
+          dplyr::filter(as.character(orig_level) == base_level) %>%
+          dplyr::select(dplyr::contains("orthogonal_degree_"))
+
+        stopifnot(nrow(baseline_x_vals) == 1)
+        baseline_x_vals <- unlist(baseline_x_vals, use.names = FALSE)
+
+        effect_betas <- x_betas %>%
+          dplyr::filter(factor == interaction_effect)
+
+        # baseline already contains adjustment from this variate, need to subtract it
+        adjustment <- (-1) * sum(effect_betas$estimate * baseline_x_vals)
+
+        estimate_vector <- rep(adjustment, nrow(mapping))
+
+        for(i in seq_along(nrow(effect_betas))) {
+          tmp <- mapping[[paste0("orthogonal_degree_", i)]] * effect_betas$estimate[[i]]
+          estimate_vector <- estimate_vector + tmp
+        }
+
+        effect_betas <- tibble::tibble(
+          actual_level = mapping$orig_level,
+          estimate = estimate_vector
+        ) %>%
+          tidyr::separate(actual_level, into = sep_into, sep = "__") %>%
+          dplyr::mutate_at(sep_into, function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2"))
+
+      } else if(is_offset) {
+        effect_betas <- tibble::tibble(
+          actual_level = names(data_attrs[[interaction_effect]]$mapping),
+          estimate = unname(data_attrs[[interaction_effect]]$mapping)
+        ) %>%
+          tidyr::separate(actual_level, into = sep_into, sep = "__") %>%
+          dplyr::mutate_at(sep_into, function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2"))
+
+      } else {
+        # simple factor
+        effect_betas <- x_betas %>%
+          dplyr::filter(factor == interaction_effect) %>%
+          tidyr::separate(actual_level, into = sep_into, sep = "__") %>%
+          dplyr::mutate_at(sep_into, function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2")) %>%
+          dplyr::select(-factor, -std_error, -std_error_pct)
+
+        # TODO - simplify this into one
+        # if(is_triple_interaction) {
+        #   effect_betas <- x_betas %>%
+        #     dplyr::filter(factor == interaction_effect) %>%
+        #     tidyr::separate(factor, into = c("primary_var", "secondary_var"), sep = "__X__") %>%
+        #     dplyr::mutate(secondary_var = stringr::str_replace(secondary_var, "_[^_]+$", "")) %>%
+        #     tidyr::separate(actual_level, into = c(.$primary_var[[1]], .$secondary_var[[1]]), sep = "__") %>%
+        #     dplyr::mutate_at(
+        #       c(.$primary_var[[1]], .$secondary_var[[1]]), function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2")
+        #     ) %>%
+        #     dplyr::select(-primary_var, -secondary_var, -std_error, -std_error_pct)
+        #
+        # } else {
+        #   effect_betas <- x_betas %>%
+        #     dplyr::filter(factor == interaction_effect) %>%
+        #     tidyr::separate(actual_level, into = main_effects, sep = "__") %>%
+        #     dplyr::mutate_at(main_effects, function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2")) %>%
+        #     dplyr::select(-factor, -std_error, -std_error_pct)
+        # }
+
+      }
+
+      join_keys <- base::intersect(colnames(base_df), colnames(effect_betas))
+
+      base_df <- base_df %>%
+        dplyr::left_join(effect_betas, by = join_keys) %>%
+        dplyr::mutate(
+          estimate = coalesce(estimate, 0),
+          estimate_sum = estimate_sum + estimate
+        ) %>%
+        dplyr::select(-estimate)
+    }
+
+    if(is_triple_interaction) {
+      # add the triple interaction itself
+      effect_betas <- x_betas %>%
+        dplyr::filter(factor == attr(x, "var_nm")) %>%
+        tidyr::separate(actual_level, into = main_effects, sep = "__") %>%
+        dplyr::mutate_at(main_effects, function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2")) %>%
+        dplyr::select(-factor, -std_error, -std_error_pct)
+
+      join_keys <- main_effects
+
+      base_df <- base_df %>%
+        dplyr::left_join(effect_betas, by = join_keys) %>%
+        dplyr::mutate(
+          estimate = coalesce(estimate, 0),
+          estimate_sum = estimate_sum + estimate
+        ) %>%
+        dplyr::select(-estimate)
+    }
+
+    model_avg_df <- base_df %>%
+      dplyr::mutate(
+        model_avg_pred_nonrescaled = exp(estimate_sum),
+        model_avg_lin_nonrescaled = estimate_sum
+      ) %>%
+      dplyr::select(-estimate_sum)
+
+    scaling_var <- main_effects[[2]]
+    scaling_base_level <- data_attrs[[scaling_var]]$base_level
+
+    scaling_df <- model_avg_df %>%
+      dplyr::filter(.data[[scaling_var]] == scaling_base_level) %>%
+      dplyr::rename(scaler_pred = model_avg_pred_nonrescaled, scaler_lin = model_avg_lin_nonrescaled) %>%
+      dplyr::select(-!!rlang::sym(scaling_var))
+
+    model_avg_df <- model_avg_df %>%
+      dplyr::left_join(scaling_df, by = setdiff(main_effects, scaling_var)) %>%
+      dplyr::mutate(
+        model_avg_pred_rescaled = model_avg_pred_nonrescaled / scaler_pred,
+        model_avg_lin_rescaled = model_avg_lin_nonrescaled / scaler_lin
+      ) %>%
+      dplyr::select(-scaler_pred, -scaler_lin)
+
+    # model_avg_df <- base_df %>%
+    #   dplyr::mutate(
+    #     model_avg_pred_nonrescaled = exp(estimate_sum),
+    #     model_avg_lin_nonrescaled = estimate_sum,
+    #     model_avg_pred_rescaled = exp(estimate_sum - baseline_estimate),
+    #     model_avg_lin_rescaled = estimate_sum - baseline_estimate
+    #   ) %>%
+    #   dplyr::select(-estimate_sum)
 
   } else if(inherits(x, "simple_factor")) {
     model_avg_df <- tibble::tibble(
@@ -174,7 +333,11 @@ compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas 
       )
   }
 
-  model_avg_df %>%
-    dplyr::mutate(orig_level = as.character(orig_level)) %>%
-    dplyr::mutate(geom_text_label = paste0(round((model_avg_pred_rescaled - 1) * 100), "%"))
+  if(!inherits(x, "interaction")) {
+    model_avg_df <- model_avg_df %>%
+      dplyr::mutate(orig_level = as.character(orig_level)) %>%
+      dplyr::mutate(geom_text_label = paste0(round((model_avg_pred_rescaled - 1) * 100), "%"))
+  }
+
+  model_avg_df
 }

@@ -42,7 +42,9 @@ as_simple_factor <- function(x) {
   attr(x, "type") <- NULL
   attr(x, "degree") <- NULL
   attr(x, "prop_log") <- NULL
-  class(x) <- setdiff(class(x), c("variate", "custom_factor", "offset"))
+  attr(x, "main_effects") <- NULL
+  attr(x, "components") <- NULL
+  class(x) <- setdiff(class(x), c("variate", "custom_factor", "offset", "interaction"))
 
   x
 }

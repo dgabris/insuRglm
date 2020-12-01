@@ -10,7 +10,7 @@ test_that("first argument must be of class setup", {
 
 test_that("factor to  be added must be present in the datasets", {
 
-  expect_error(factor_add(setup, imaginary_column), "This predictor is not present in the dataset provided to setup object.")
+  expect_error(factor_add(setup, imaginary_column), "'imaginary_column' is not in the modeling dataset.")
 
 })
 

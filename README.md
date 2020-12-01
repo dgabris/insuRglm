@@ -75,11 +75,6 @@ setup <- setup(
   keep_cols = c('pol_nbr', 'exposure', 'premium')
 )
 #> Setting levels with the highest weight as base levels.
-#> 
-#> Attaching package: 'purrr'
-#> The following object is masked from 'package:magrittr':
-#> 
-#>     set_names
 #> Saving setup object to 'C:/Users/daniel.gabris/Documents/insuRglm'
 #> Setup - OK
 #> 

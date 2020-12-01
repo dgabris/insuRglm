@@ -1,4 +1,4 @@
-factor_tables <- function(setup, betas, current_baseline, predictions) {
+factor_tables <- function(setup, betas, current_baseline, predictions, data_attrs) {
   train <- setup$data_train
   target <- setup$target
   weight <- setup$weight
@@ -9,6 +9,7 @@ factor_tables <- function(setup, betas, current_baseline, predictions) {
   simple_factors <- setup$simple_factors
   predictors <- setup$current_model$predictors
 
+  # vars <- c(.predictors, setdiff(simple_factors, predictors))
   vars <- c(predictors, setdiff(simple_factors, predictors))
 
   obs_avg_tables <- setup$obs_avg_tables[vars]
@@ -31,35 +32,45 @@ factor_tables <- function(setup, betas, current_baseline, predictions) {
       mapping <- stats::setNames(orig_levels, orig_levels)
     }
 
-    # obs_avg <- compute_obs_avg(x, target_vector, weight_vector)
     fitted_avg <- compute_fitted_avg(x, predictions, weight_vector)
 
     if(inherits(x, "interaction")) {
-      interaction_var <- var
-      main_vars <- unlist(stringr::str_split(interaction_var, "\\*"))
+      main_effects <- attr(x, "main_effects")
+      components <- attr(x, "components")
 
       x_betas <- betas %>%
-        dplyr::filter(factor %in% c("(Intercept)", interaction_var, main_vars))
+        dplyr::filter(factor %in% c("(Intercept)", main_effects, components, var))
+
+      join_keys <- main_effects
+
+      model_avg <- compute_model_avg(x, x_betas, current_baseline, data_attrs = data_attrs)
+
+      obs_avg %>%
+        dplyr::left_join(fitted_avg, by = join_keys) %>%
+        dplyr::left_join(model_avg, by = join_keys)
 
     } else {
       x_betas <- betas %>% dplyr::filter(factor %in% c("(Intercept)", var))
+      join_keys <- "orig_level"
+
+      model_avg <- compute_model_avg(x, x_betas, current_baseline)
+
+      dplyr::bind_cols(
+        factor = rep(var, length(mapping)),
+        orig_level = names(mapping),
+        actual_level = unname(mapping)) %>%
+        dplyr::left_join(obs_avg, by = join_keys) %>%
+        dplyr::left_join(fitted_avg, by = join_keys) %>%
+        dplyr::left_join(model_avg, by = join_keys)
     }
 
-    model_avg <- compute_model_avg(x, x_betas, current_baseline)
-
-    dplyr::bind_cols(
-      factor = rep(var, length(mapping)),
-      orig_level = names(mapping),
-      actual_level = unname(mapping)) %>%
-      dplyr::left_join(obs_avg, by = c("orig_level")) %>%
-      dplyr::left_join(fitted_avg, by = c("orig_level")) %>%
-      dplyr::left_join(model_avg, by = c("orig_level"))
   },
   current_baseline = current_baseline,
   betas = betas,
   target_vector = target_vector,
   weight_vector = weight_vector,
   predictions = predictions,
+  data_attrs = data_attrs,
   compute_fitted_avg = compute_fitted_avg,
   compute_model_avg = compute_model_avg,
   `%>%` = `%>%`

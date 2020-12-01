@@ -148,6 +148,12 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     }
   }
 
+  if(any(stringr::str_detect(colnames(data_train), " "))) {
+    cat("Replacing spaces in column names with underscores\n")
+    colnames(data_train) <- stringr::str_replace_all(colnames(data_train), " ", "_")
+    if(!is.null(data_test)) colnames(data_test) <- stringr::str_replace_all(colnames(data_test), " ", "_")
+  }
+
   if(!(inherits(target, 'character') && length(target) == 1)) stop("'target' must be a character scalar")
   if(!target %in% colnames(data_train)) stop('Target variable not in the dataset')
 
@@ -274,6 +280,9 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
   simple_factor_list <- purrr::pmap(
     list(train_list, test_list, simple_factors),
     carrier::crate(function(x_train, x_test, var_nm) {
+
+      levels(x_train) <- stringr::str_replace_all(levels(x_train), "__", "_")
+      if(!is.null(x_test)) levels(x_test) <- stringr::str_replace_all(levels(x_test), "__", "_")
 
       result <- list()
 

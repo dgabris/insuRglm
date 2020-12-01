@@ -56,7 +56,7 @@ vignette('insuRglm')
 ## Usage
 First step of using the package should always be the one-time `setup` function.
 
-```{r}
+```{r, message=FALSE}
 data('sev_train')
 
 library(insuRglm)
@@ -105,4 +105,8 @@ modeling %>%
   model_visualize(factors = 'unfitted')
 ```
 
+```{r, include=FALSE}
+file.remove("sev_gamma_model.rds")
+file.remove("sev_gamma_setup.rds")
+```
 

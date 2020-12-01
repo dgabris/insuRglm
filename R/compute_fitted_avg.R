@@ -33,8 +33,26 @@ compute_fitted_avg <- function(x, predictions, weight_vector, by = NULL) {
       )
   }
 
-  fitted_avg_df %>%
+  fitted_avg_df <- fitted_avg_df %>%
     dplyr::select(-base_lvl_idx) %>%
     dplyr::rename(orig_level = x) %>%
     dplyr::mutate(orig_level = as.character(orig_level))
+
+  if(inherits(x, "interaction")) {
+    base_levels <- stringr::str_split(attr(x, "base_level"), "__", simplify = TRUE) %>%
+      as.vector() %>%
+      paste0("(__)?(,", ., ",)(__)?")
+
+    base_lvl_regex <- paste0(base_levels, collapse = "|")
+
+    fitted_avg_df <- fitted_avg_df %>%
+      dplyr::mutate(
+        fitted_avg_pred_rescaled = if_else(stringr::str_detect(orig_level, base_lvl_regex), 1, fitted_avg_pred_rescaled),
+        fitted_avg_lin_rescaled = if_else(stringr::str_detect(orig_level, base_lvl_regex), 0, fitted_avg_lin_rescaled)
+      ) %>%
+      tidyr::separate(orig_level, into = attr(x, "main_effects"), sep = "__") %>%
+      dplyr::mutate_at(attr(x, "main_effects"), function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2"))
+  }
+
+  fitted_avg_df
 }

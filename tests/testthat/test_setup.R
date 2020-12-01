@@ -1808,6 +1808,7 @@ test_that("setup produces what it should", {
             class = "family"
           ),
           predictors = NULL,
+          .predictors = NULL,
           data_attrs = list(
             pol_yr = list(
               levels = c("2000", "2001", "2002",
@@ -2724,6 +2725,7 @@ test_that("setup produces what it should", {
             class = "family"
           ),
           predictors = NULL,
+          .predictors = NULL,
           data_attrs = list(
             pol_yr = list(
               levels = c("2000", "2001", "2002",

@@ -1,4 +1,4 @@
-twoway_plot <- function(df, label_prefix = NULL, label_suffix = NULL) {
+twoway_plot <- function(df, label_prefix = NULL, label_suffix = NULL, as_list = FALSE) {
   stopifnot(inherits(df, "data.frame"))
 
   x_cols <- names(df)[c(1, 2)]
@@ -15,16 +15,46 @@ twoway_plot <- function(df, label_prefix = NULL, label_suffix = NULL) {
       dplyr::mutate(grp = paste0(type, "_", !!x2_sym))
 
     aes_prep <- ggplot2::aes(x = !!x1_sym, y = target, group = grp)
-    geom_prep <- list(
-      ggplot2::geom_line(ggplot2::aes(color = !!x2_sym, linetype = type), size = 1.05),
-      ggplot2::geom_point(ggplot2::aes(color = !!x2_sym, shape = type), size = 2.5),
-      ggplot2::scale_shape_manual(name = "Type", values = c(
-        "Observed Average" = 15, "Fitted Average" = 16, "Fitted Average (ref. model)" = 17
-      )),
-      ggplot2::scale_linetype_manual(name = "Type", values = c(
-        "Observed Average" = "solid", "Fitted Average" = "dotted", "Fitted Average (ref. model)" = "dashed"
-      ))
-    )
+
+    if("Fitted Average (current_model)" %in% unique(longer_df$type)) {
+      known_values <- c("Observed Average", "Fitted Average (current_model)")
+      unknown_value <- setdiff(unique(longer_df$type), known_values)
+
+      shape_mapping <- setNames(c(15, 16, 17), c(known_values, unknown_value))
+      linetype_mapping <- setNames(c("solid", "dotted", "dashed"), c(known_values, unknown_value))
+
+      geom_prep <- list(
+        ggplot2::geom_line(ggplot2::aes(color = !!x2_sym, linetype = type), size = 1.05),
+        ggplot2::geom_point(ggplot2::aes(color = !!x2_sym, shape = type), size = 2.5),
+        ggplot2::scale_shape_manual(name = "Type", values = shape_mapping),
+        ggplot2::scale_linetype_manual(name = "Type", values = linetype_mapping)
+      )
+
+    } else if("Model Parameters (current_model)" %in% unique(longer_df$type)) {
+      known_values <- c("Model Parameters (current_model)")
+      unknown_value <- setdiff(unique(longer_df$type), known_values)
+
+      shape_mapping <- setNames(c(15, 16), c(known_values, unknown_value))
+      linetype_mapping <- setNames(c("solid", "dotted"), c(known_values, unknown_value))
+
+      geom_prep <- list(
+        ggplot2::geom_line(ggplot2::aes(color = !!x2_sym, linetype = type), size = 1.05),
+        ggplot2::geom_point(ggplot2::aes(color = !!x2_sym, shape = type), size = 2.5),
+        ggplot2::scale_shape_manual(name = "Type", values = shape_mapping),
+        ggplot2::scale_linetype_manual(name = "Type", values = linetype_mapping)
+      )
+    } else {
+      geom_prep <- list(
+        ggplot2::geom_line(ggplot2::aes(color = !!x2_sym, linetype = type), size = 1.05),
+        ggplot2::geom_point(ggplot2::aes(color = !!x2_sym, shape = type), size = 2.5),
+        ggplot2::scale_shape_manual(name = "Type", values = c(
+          "Observed Average" = 15, "Fitted Average" = 16
+        )),
+        ggplot2::scale_linetype_manual(name = "Type", values = c(
+          "Observed Average" = "solid", "Fitted Average" = "dotted"
+        ))
+      )
+    }
 
   } else {
     aes_prep <- ggplot2::aes(x = !!x1_sym, y = target, group = !!x2_sym)
@@ -57,13 +87,24 @@ twoway_plot <- function(df, label_prefix = NULL, label_suffix = NULL) {
       legend.text = ggplot2::element_text(size = 7)
     )
 
-  target_plot +
-    weight_plot +
-    patchwork::plot_layout(nrow = 2, ncol = 1, heights = c(2, 1), guides = "collect") +
-    patchwork::plot_annotation(
-      title = paste0(label_prefix, x_cols[[1]], label_suffix),
-      theme = ggplot2::theme(
-        plot.title = ggplot2::element_text(hjust = 0.45)
+  title <- paste0(label_prefix, x_cols[[1]], " x ", x_cols[[2]], label_suffix)
+
+  if(as_list) {
+    target_plot <- target_plot +
+      ggplot2::ggtitle(title) +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.45))
+
+    list(target_plot = target_plot, weight_plot = weight_plot)
+  } else {
+    target_plot +
+      weight_plot +
+      patchwork::plot_layout(nrow = 2, ncol = 1, heights = c(2, 1), guides = "collect") +
+      patchwork::plot_annotation(
+        title = title,
+        theme = ggplot2::theme(
+          plot.title = ggplot2::element_text(hjust = 0.45)
+        )
       )
-    )
+  }
+
 }

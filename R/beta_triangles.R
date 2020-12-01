@@ -7,6 +7,9 @@ beta_triangles <- function(betas, glm, predictor_attrs) {
   vcov_estimate_cols <- colnames(vcov_estimate_matrix)
   vcov_estimate_rows <- rownames(vcov_estimate_matrix)
 
+  is_offset <- vapply(predictor_attrs, function(x) x$class[[1]] == "offset", logical(1))
+  predictor_attrs <- predictor_attrs[!is_offset]
+
   predictors <- names(predictor_attrs)
   result <- list()
 
