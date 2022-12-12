@@ -44,7 +44,8 @@ model_export <- function(setup, xlsx_file, overwrite = FALSE) {
     xlsx_file <- paste0(xlsx_file, ".xlsx")
   }
 
-  predictor_names <- setup$current_model$predictors
+  # predictor_names <- setup$current_model$predictors
+  predictor_names <- names(setup$current_model$relativities)[-1]
 
   base_df <- setup$current_model$betas %>%
     dplyr::filter(factor == "(Intercept)") %>%

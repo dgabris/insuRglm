@@ -47,8 +47,8 @@ compute_fitted_avg <- function(x, predictions, weight_vector, by = NULL) {
 
     fitted_avg_df <- fitted_avg_df %>%
       dplyr::mutate(
-        fitted_avg_pred_rescaled = if_else(stringr::str_detect(orig_level, base_lvl_regex), 1, fitted_avg_pred_rescaled),
-        fitted_avg_lin_rescaled = if_else(stringr::str_detect(orig_level, base_lvl_regex), 0, fitted_avg_lin_rescaled)
+        fitted_avg_pred_rescaled = dplyr::if_else(stringr::str_detect(orig_level, base_lvl_regex), 1, fitted_avg_pred_rescaled),
+        fitted_avg_lin_rescaled = dplyr::if_else(stringr::str_detect(orig_level, base_lvl_regex), 0, fitted_avg_lin_rescaled)
       ) %>%
       tidyr::separate(orig_level, into = attr(x, "main_effects"), sep = "__") %>%
       dplyr::mutate_at(attr(x, "main_effects"), function(x) stringr::str_replace(x, "(,)(.+)(,)", "\\2"))

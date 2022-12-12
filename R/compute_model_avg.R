@@ -109,7 +109,7 @@ compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas 
     base_df <- tibble::tibble(orig_level = levels(x)) %>%
       tidyr::separate(orig_level, into = main_effects, sep = "__") %>%
       dplyr::mutate_at(main_effects, function(x) stringr::str_replace(x, "^(,)(.+)(,)$", "\\2")) %>%
-      mutate(estimate_sum = baseline_estimate)
+      dplyr::mutate(estimate_sum = baseline_estimate)
 
     for(main_effect in main_effects) {
       effect_betas <- x_betas %>%
@@ -119,7 +119,7 @@ compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas 
       base_df <- base_df %>%
         dplyr::left_join(effect_betas, by = setNames("actual_level", main_effect)) %>%
         dplyr::mutate(
-          estimate = coalesce(estimate, 0),
+          estimate = dplyr::coalesce(estimate, 0),
           estimate_sum = estimate_sum + estimate
         ) %>%
         dplyr::select(-estimate)
@@ -229,7 +229,7 @@ compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas 
       base_df <- base_df %>%
         dplyr::left_join(effect_betas, by = join_keys) %>%
         dplyr::mutate(
-          estimate = coalesce(estimate, 0),
+          estimate = dplyr::coalesce(estimate, 0),
           estimate_sum = estimate_sum + estimate
         ) %>%
         dplyr::select(-estimate)
@@ -248,7 +248,7 @@ compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas 
       base_df <- base_df %>%
         dplyr::left_join(effect_betas, by = join_keys) %>%
         dplyr::mutate(
-          estimate = coalesce(estimate, 0),
+          estimate = dplyr::coalesce(estimate, 0),
           estimate_sum = estimate_sum + estimate
         ) %>%
         dplyr::select(-estimate)
@@ -303,11 +303,11 @@ compute_model_avg <- function(x, x_betas, current_baseline, by = NULL, by_betas 
 
   if(!is.null(by)) {
     x_model_avg <- model_avg_df %>%
-      select(orig_level, model_avg_lin_nonrescaled_x = model_avg_lin_nonrescaled) %>%
-      mutate(orig_level = as.character(orig_level))
+      dplyr::select(orig_level, model_avg_lin_nonrescaled_x = model_avg_lin_nonrescaled) %>%
+      dplyr::mutate(orig_level = as.character(orig_level))
 
     by_model_avg <- compute_model_avg(by, by_betas, current_baseline) %>%
-      select(orig_level, model_avg_lin_nonrescaled_by = model_avg_lin_nonrescaled)
+      dplyr::select(orig_level, model_avg_lin_nonrescaled_by = model_avg_lin_nonrescaled)
 
     model_avg_df <- tidyr::crossing(orig_level = x_model_avg$orig_level, by = by_model_avg$orig_level) %>%
       dplyr::left_join(x_model_avg, by = "orig_level") %>%
