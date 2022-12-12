@@ -74,7 +74,7 @@ twoway_plot <- function(df, label_prefix = NULL, label_suffix = NULL, as_list = 
       axis.ticks.x = ggplot2::element_blank(),
       legend.text = ggplot2::element_text(size = 7)
     ) +
-    ggplot2::guides(color = FALSE)
+    ggplot2::guides(color = "none")
 
   weight_plot <- df %>%
     dplyr::select(!!x1_sym, !!x2_sym, weight_sum) %>%

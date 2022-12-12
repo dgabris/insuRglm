@@ -56,7 +56,7 @@ crossval_predict <- function(data_train, model, cv_folds, seed) {
   offset = offset,
   `%>%` = `%>%`
   ),
-  .options = furrr::future_options(globals = FALSE, seed = seed)
+  .options = furrr::furrr_options(globals = FALSE, seed = seed)
   )
 
   dplyr::bind_rows(!!!cv_predictions_list) %>%

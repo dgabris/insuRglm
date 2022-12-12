@@ -75,7 +75,7 @@ factor_tables <- function(setup, betas, current_baseline, predictions, data_attr
   compute_model_avg = compute_model_avg,
   `%>%` = `%>%`
   ),
-  .options = furrr::future_options(globals = FALSE)
+  .options = furrr::furrr_options(globals = FALSE)
   )
 
   factor_tables

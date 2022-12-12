@@ -309,7 +309,7 @@ setup <- function(data_train, data_test = NULL, target, weight = NULL, offset = 
     target_vector = target_vector,
     weight_vector = weight_vector
     )
-    # .options = furrr::future_options(globals = FALSE)
+    # .options = furrr::furrr_options(globals = FALSE)
   ) %>%
   setNames(vapply(., function(x) x$x_attrs$var_nm, character(1)))
 
